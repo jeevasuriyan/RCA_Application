@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RCA Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- ░░ Noise texture overlay ░░ -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="nav-brand">
+        <div class="brand-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="brand-wordmark">RCA<em>Manager</em></span>
+      </div>
+
+      <nav class="nav-pills">
+        <button class="npill active" id="pill-create" onclick="switchView('create')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          New Incident
+        </button>
+        <button class="npill" id="pill-reports" onclick="switchView('reports')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Active Reports
+          <span class="pill-count" id="tab-count">0</span>
+        </button>
+      </nav>
+
+      <div class="nav-counters">
+        <div class="nc-item"><span class="nc-dot crit"></span><span id="stat-critical">0</span><span class="nc-lbl">Critical</span></div>
+        <div class="nc-sep"></div>
+        <div class="nc-item"><span class="nc-dot high"></span><span id="stat-high">0</span><span class="nc-lbl">High</span></div>
+        <div class="nc-sep"></div>
+        <div class="nc-item nc-total"><span id="stat-total">0</span><span class="nc-lbl">Total</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════ VIEW: NEW INCIDENT ══════════════ -->
+  <div class="view active" id="view-create">
+
+    <!-- Hero (compact banner) -->
+    <div class="hero">
+      <div class="hero-accent-bar" aria-hidden="true"></div>
+      <div class="hero-inner hero-inner--centered">
+        <div class="hero-left" style="width:100%;text-align:center;">
+          <div class="hero-eyebrow" style="justify-content:center;">
+            <!-- <span class="hero-tag-dot"></span> -->
+            <span>Incident Reporting System</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form card -->
+    <div class="form-wrap">
+      <div class="form-card">
+
+        <!-- §01 Incident Info -->
+        <div class="fcard-section">
+          <div class="fcs-header">
+            <div class="fcs-num">01</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Incident Information</h3>
+              <p class="fcs-sub">Basic identifiers for the incident record</p>
+            </div>
+          </div>
+          <div class="fg r3">
+            <div class="field">
+              <label class="fl">Client Name <sup class="req">*</sup></label>
+              <input id="clientName" class="fi" placeholder="e.g. Vision_Bank" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="fl">Priority <sup class="req">*</sup></label>
+              <div class="fsel-wrap">
+                <select id="priority" class="fi fsel">
+                  <option value="">Select priority…</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field">
+              <label class="fl">Raised By</label>
+              <input id="raisedBy" class="fi" placeholder="e.g. Rahul Das">
+            </div>
+            <div class="field">
+              <label class="fl">Product</label>
+              <input id="product" class="fi" placeholder="e.g. TerrA">
+            </div>
+            <div class="field">
+              <label class="fl">Affected Module</label>
+              <input id="affectedModule" class="fi" placeholder="e.g. Users">
+            </div>
+            <div class="field">
+              <label class="fl">Affected Feature</label>
+              <input id="affectedFeature" class="fi" placeholder="e.g. Relay">
+            </div>
+          </div>
+        </div>
+
+        <div class="fcard-divider"></div>
+
+        <!-- §02 Version Details -->
+        <div class="fcard-section">
+          <div class="fcs-header">
+            <div class="fcs-num">02</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Version Details</h3>
+              <p class="fcs-sub">Software versions involved in the incident</p>
+            </div>
+          </div>
+          <div class="fg r3">
+            <div class="field">
+              <label class="fl">Client Version</label>
+              <div class="vpfx-wrap">
+                <span class="vpfx">v</span>
+                <input id="clientVersion" class="fi vpfx-fi" placeholder="3.2.1">
+              </div>
+            </div>
+            <div class="field">
+              <label class="fl">Server Version</label>
+              <div class="vpfx-wrap">
+                <span class="vpfx">v</span>
+                <input id="serverVersion" class="fi vpfx-fi" placeholder="5.0.4">
+              </div>
+            </div>
+            <div class="field">
+              <label class="fl">Agent Version</label>
+              <div class="vpfx-wrap">
+                <span class="vpfx">v</span>
+                <input id="agentVersion" class="fi vpfx-fi" placeholder="2.1.0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fcard-divider"></div>
+
+        <!-- §03 Description -->
+        <div class="fcard-section">
+          <div class="fcs-header">
+            <div class="fcs-num">03</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Description</h3>
+              <p class="fcs-sub">Summarise and detail the root cause</p>
+            </div>
+          </div>
+          <div class="fg r1">
+            <div class="field">
+              <label class="fl">Short Description</label>
+              <textarea id="description" class="fi ftarea short" placeholder="One-line summary of what occurred…"></textarea>
+            </div>
+          </div>
+          <div class="fg r1" style="margin-top:16px">
+            <div class="field">
+              <label class="fl">Detailed Description</label>
+              <div class="editor-shell" id="editor-shell">
+                <div id="quill-toolbar">
+                  <span class="ql-formats">
+                    <select class="ql-header">
+                      <option value="1">H1</option><option value="2">H2</option>
+                      <option value="3">H3</option><option selected>Normal</option>
+                    </select>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-bold"></button><button class="ql-italic"></button>
+                    <button class="ql-underline"></button><button class="ql-strike"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-list" value="ordered"></button>
+                    <button class="ql-list" value="bullet"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-blockquote"></button>
+                    <button class="ql-code-block"></button>
+                  </span>
+                  <span class="ql-formats">
+                    <button class="ql-link"></button>
+                    <button class="ql-clean"></button>
+                  </span>
+                </div>
+                <div id="details-editor"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fcard-divider"></div>
+
+        <!-- §04 Corrective Action -->
+        <div class="fcard-section">
+          <div class="fcs-header">
+            <div class="fcs-num">04</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Corrective Action</h3>
+              <p class="fcs-sub">Detail the corrective action taken to fix the issue</p>
+            </div>
+          </div>
+
+          <!-- Action taken textarea -->
+          <div class="fg r1" style="margin-bottom:20px">
+            <div class="field">
+              <label class="fl">Action Taken</label>
+              <textarea id="correctiveAction" class="fi ftarea short" placeholder="Describe the corrective action taken to resolve the incident…"></textarea>
+            </div>
+          </div>
+
+          <!-- Toggle row -->
+          <div class="ca-toggles">
+            <div class="ca-toggle-item">
+              <div class="ca-toggle-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Hotfix or Patch
+              </div>
+              <div class="ca-toggle-group" id="toggle-hotfix">
+                <button class="ca-toggle-btn active" data-val="yes" onclick="setToggle('hotfix','yes',this)">Yes</button>
+                <button class="ca-toggle-btn" data-val="no" onclick="setToggle('hotfix','no',this)">No</button>
+              </div>
+            </div>
+            <div class="ca-toggle-item">
+              <div class="ca-toggle-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                Rollback
+              </div>
+              <div class="ca-toggle-group" id="toggle-rollback">
+                <button class="ca-toggle-btn" data-val="yes" onclick="setToggle('rollback','yes',this)">Yes</button>
+                <button class="ca-toggle-btn active" data-val="no" onclick="setToggle('rollback','no',this)">No</button>
+              </div>
+            </div>
+            <div class="ca-toggle-item">
+              <div class="ca-toggle-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                Workarounds
+              </div>
+              <div class="ca-toggle-group" id="toggle-workaround">
+                <button class="ca-toggle-btn" data-val="yes" onclick="setToggle('workaround','yes',this)">Yes</button>
+                <button class="ca-toggle-btn active" data-val="no" onclick="setToggle('workaround','no',this)">No</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preventive Measures -->
+          <div class="ca-preventive">
+            <div class="ca-preventive-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Preventive Measures Required?
+            </div>
+            <div class="ca-pm-grid">
+              <div class="ca-pm-item">
+                <label class="ca-pm-label">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  Code Refactoring
+                </label>
+                <input id="pm-code" class="fi ca-pm-input" placeholder="Describe code changes required…">
+              </div>
+              <div class="ca-pm-item">
+                <label class="ca-pm-label">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  Test Enhancements
+                </label>
+                <input id="pm-test" class="fi ca-pm-input" placeholder="Describe test coverage improvements…">
+              </div>
+              <div class="ca-pm-item">
+                <label class="ca-pm-label">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Process Improvements
+                </label>
+                <input id="pm-process" class="fi ca-pm-input" placeholder="Describe workflow or process changes…">
+              </div>
+              <div class="ca-pm-item">
+                <label class="ca-pm-label">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Monitoring &amp; Alerts
+                </label>
+                <input id="pm-monitoring" class="fi ca-pm-input" placeholder="Describe alerting improvements…">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fcard-divider"></div>
+
+        <!-- §05 Attachments -->
+        <div class="fcard-section">
+          <div class="fcs-header">
+            <div class="fcs-num">05</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Attachments</h3>
+              <p class="fcs-sub">Email correspondence and reference screenshots</p>
+            </div>
+          </div>
+
+          <div class="fg r2" style="margin-bottom:20px">
+            <!-- Received Email -->
+            <div class="field">
+              <label class="fl">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Received Email
+              </label>
+              <div class="dropzone" id="dz-email" onclick="document.getElementById('file-email').click()" ondrop="handleDrop(event,'email')" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')">
+                <input type="file" id="file-email" accept=".eml,.msg,.pdf,.txt" style="display:none" onchange="handleFileSelect(event,'email')">
+                <div class="dz-idle" id="dz-email-idle">
+                  <div class="dz-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </div>
+                  <p class="dz-main">Drop email file or <span class="dz-link">browse</span></p>
+                  <p class="dz-hint">.eml · .msg · .pdf · .txt</p>
+                </div>
+                <div class="dz-preview hidden" id="dz-email-preview">
+                  <div class="dp-icon email-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </div>
+                  <div class="dp-info">
+                    <span class="dp-name" id="dp-email-name"></span>
+                    <span class="dp-size" id="dp-email-size"></span>
+                  </div>
+                  <button class="dp-remove" onclick="removeFile(event,'email')" title="Remove">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Response with Closure -->
+            <div class="field">
+              <label class="fl">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                Response with Closure
+              </label>
+              <div class="dropzone" id="dz-closure" onclick="document.getElementById('file-closure').click()" ondrop="handleDrop(event,'closure')" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')">
+                <input type="file" id="file-closure" accept=".eml,.msg,.pdf,.txt,.docx" style="display:none" onchange="handleFileSelect(event,'closure')">
+                <div class="dz-idle" id="dz-closure-idle">
+                  <div class="dz-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  </div>
+                  <p class="dz-main">Drop closure document or <span class="dz-link">browse</span></p>
+                  <p class="dz-hint">.eml · .msg · .pdf · .docx</p>
+                </div>
+                <div class="dz-preview hidden" id="dz-closure-preview">
+                  <div class="dp-icon closure-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  </div>
+                  <div class="dp-info">
+                    <span class="dp-name" id="dp-closure-name"></span>
+                    <span class="dp-size" id="dp-closure-size"></span>
+                  </div>
+                  <button class="dp-remove" onclick="removeFile(event,'closure')" title="Remove">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reference Screenshots -->
+          <div class="field">
+            <label class="fl">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Reference Screenshots
+            </label>
+            <div class="dropzone screenshots-dz" id="dz-screenshots" onclick="document.getElementById('file-screenshots').click()" ondrop="handleScreenshotDrop(event)" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')">
+              <input type="file" id="file-screenshots" accept="image/*" multiple style="display:none" onchange="handleScreenshots(event)">
+              <div class="dz-idle" id="dz-screenshots-idle">
+                <div class="dz-icon screenshots-icon-color">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <p class="dz-main">Drop screenshots or <span class="dz-link">browse</span></p>
+                <p class="dz-hint">PNG · JPG · GIF · WEBP — multiple files supported</p>
+              </div>
+              <div class="screenshots-grid" id="screenshots-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit footer -->
+        <div class="fcard-footer">
+          <p class="fcard-hint"><sup class="req">*</sup> Required fields</p>
+          <button class="btn-create" id="submitBtn" onclick="createRCA()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create RCA Report
+          </button>
+        </div>
+
+      </div><!-- /form-card -->
+    </div><!-- /form-wrap -->
+  </div><!-- /view-create -->
+
+
+  <!-- ══════════════ VIEW: ACTIVE REPORTS ══════════════ -->
+  <div class="view" id="view-reports">
+    <div class="reports-shell">
+
+      <div class="reports-header">
+        <div class="rh-left">
+          <h2 class="rh-title">Active Reports</h2>
+          <p class="rh-sub">All filed root cause analysis records</p>
+        </div>
+        <div class="rh-right">
+          <div class="searchbar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchBox" placeholder="Search client, product, priority…" oninput="filterRCA()">
+          </div>
+        </div>
+      </div>
+
+      <div class="pfilters">
+        <button class="pf active" onclick="setFilter('all',this)">All</button>
+        <button class="pf" onclick="setFilter('critical',this)"><span class="pf-dot" style="background:#e05c6b"></span>Critical</button>
+        <button class="pf" onclick="setFilter('high',this)"><span class="pf-dot" style="background:#e89050"></span>High</button>
+        <button class="pf" onclick="setFilter('medium',this)"><span class="pf-dot" style="background:#d4a93a"></span>Medium</button>
+        <button class="pf" onclick="setFilter('low',this)"><span class="pf-dot" style="background:#3dbfa0"></span>Low</button>
+      </div>
+
+      <div id="empty-state" class="empty-state">
+        <div class="es-visual">
+          <div class="es-rings"><div class="esr esr1"></div><div class="esr esr2"></div></div>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        </div>
+        <h3>No incidents yet</h3>
+        <p>Create your first report using the New Incident tab</p>
+        <button class="es-cta" onclick="switchView('create')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Incident
+        </button>
+      </div>
+
+      <div id="list" class="reports-grid"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

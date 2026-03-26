@@ -1,0 +1,539 @@
+import { API } from "./config.js";
+
+// ── Corrective Action toggles ─────────────────────────────
+const toggleState = { hotfix: 'yes', rollback: 'no', workaround: 'no' };
+
+window.setToggle = function (key, val, btn) {
+  toggleState[key] = val;
+  const group = document.getElementById(`toggle-${key}`);
+  group.querySelectorAll('.ca-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+// ── Quill ─────────────────────────────────────────────────
+const quill = new Quill('#details-editor', {
+  theme: 'snow',
+  modules: { toolbar: '#quill-toolbar' },
+  placeholder: 'Root cause, impact, timeline, and resolution steps…',
+});
+
+// ── Priority map ──────────────────────────────────────────
+const PRIORITY = {
+  critical: { label: 'Critical', color: '#e05c6b', cls: 'critical' },
+  high:     { label: 'High',     color: '#e89050', cls: 'high'     },
+  medium:   { label: 'Medium',   color: '#d4a93a', cls: 'medium'   },
+  low:      { label: 'Low',      color: '#3dbfa0', cls: 'low'      },
+};
+function getPriority(v = '') {
+  return PRIORITY[v.toLowerCase()] || { label: v || 'Unknown', color: '#404860', cls: 'unknown' };
+}
+
+// ── RCA record cache (keyed by _id for safe edit lookups) ─
+const rcaCache = {};
+
+// ── File state ────────────────────────────────────────────
+const attachments = { email: null, closure: null };
+const screenshots = [];   // { file, dataUrl }
+
+// ── Dropzone helpers ──────────────────────────────────────
+window.handleFileSelect = function (e, type) {
+  const file = e.target.files?.[0];
+  if (file) setAttachment(type, file);
+};
+
+window.handleDrop = function (e, type) {
+  e.preventDefault();
+  document.getElementById(`dz-${type}`).classList.remove('drag-over');
+  const file = e.dataTransfer.files?.[0];
+  if (file) setAttachment(type, file);
+};
+
+function setAttachment(type, file) {
+  attachments[type] = file;
+  const idle    = document.getElementById(`dz-${type}-idle`);
+  const preview = document.getElementById(`dz-${type}-preview`);
+  document.getElementById(`dp-${type}-name`).textContent = file.name;
+  document.getElementById(`dp-${type}-size`).textContent = formatBytes(file.size);
+  idle.classList.add('hidden');
+  preview.classList.remove('hidden');
+}
+
+window.removeFile = function (e, type) {
+  e.stopPropagation();
+  attachments[type] = null;
+  document.getElementById(`file-${type}`).value = '';
+  document.getElementById(`dz-${type}-idle`).classList.remove('hidden');
+  document.getElementById(`dz-${type}-preview`).classList.add('hidden');
+};
+
+// ── Screenshot helpers ────────────────────────────────────
+window.handleScreenshots = function (e) {
+  const files = Array.from(e.target.files || []);
+  files.forEach(addScreenshot);
+  e.target.value = '';
+};
+
+window.handleScreenshotDrop = function (e) {
+  e.preventDefault();
+  document.getElementById('dz-screenshots').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+  files.forEach(addScreenshot);
+};
+
+function addScreenshot(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const entry = { file, dataUrl: ev.target.result };
+    screenshots.push(entry);
+    renderScreenshots();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderScreenshots() {
+  const grid = document.getElementById('screenshots-grid');
+  const dz   = document.getElementById('dz-screenshots');
+  grid.innerHTML = '';
+
+  if (screenshots.length > 0) {
+    dz.classList.add('has-files');
+  } else {
+    dz.classList.remove('has-files');
+  }
+
+  screenshots.forEach((s, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'ss-thumb';
+    thumb.innerHTML = `
+      <img src="${s.dataUrl}" alt="screenshot ${i+1}">
+      <button class="ss-thumb-remove" onclick="removeScreenshot(${i})" title="Remove">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  if (screenshots.length > 0) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'ss-add-more';
+    addBtn.title = 'Add more';
+    addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    addBtn.onclick = () => document.getElementById('file-screenshots').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+window.removeScreenshot = function (i) {
+  screenshots.splice(i, 1);
+  renderScreenshots();
+};
+
+// ── View switching ────────────────────────────────────────
+window.switchView = function (view, fromEdit = false) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+
+  document.getElementById('pill-create') .classList.toggle('active', view === 'create');
+  document.getElementById('pill-reports').classList.toggle('active', view === 'reports');
+
+  // If user manually navigates to create (not from editRCA), reset edit state
+  if (view === 'create' && !fromEdit && window._editingId) {
+    window._editingId = null;
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create RCA Report`;
+    btn.classList.remove('editing');
+  }
+};
+
+// ── Filter state ──────────────────────────────────────────
+let currentFilter = 'all';
+let allData       = [];
+
+window.setFilter = function (filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.pf').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+};
+
+function applyFilters() {
+  const q = (document.getElementById('searchBox')?.value || '').toLowerCase();
+  let filtered = allData;
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(r => r.priority?.toLowerCase() === currentFilter);
+  }
+  if (q) {
+    filtered = filtered.filter(r =>
+      (r.clientName      || '').toLowerCase().includes(q) ||
+      (r.description     || '').toLowerCase().includes(q) ||
+      (r.priority        || '').toLowerCase().includes(q) ||
+      (r.event?.product  || '').toLowerCase().includes(q) ||
+      (r.event?.raisedBy || '').toLowerCase().includes(q)
+    );
+  }
+  renderRCA(filtered);
+}
+
+window.filterRCA = applyFilters;
+
+// ── Create ────────────────────────────────────────────────
+window.createRCA = async function () {
+  const btn = document.getElementById('submitBtn');
+  const clientName = document.getElementById('clientName').value.trim();
+  const priority   = document.getElementById('priority').value;
+
+  if (!clientName || !priority) { shake(btn); return; }
+
+  const isEditing = !!window._editingId;
+  const editId    = window._editingId;
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0"/></svg> ${isEditing ? 'Updating…' : 'Creating…'}`;
+
+  try {
+    const formData = new FormData();
+
+    // Scalar fields
+    const fields = {
+      clientName,
+      priority,
+      description:         document.getElementById('description').value.trim(),
+      raisedBy:            document.getElementById('raisedBy').value.trim(),
+      product:             document.getElementById('product').value.trim(),
+      affectedModule:      document.getElementById('affectedModule').value.trim(),
+      affectedFeature:     document.getElementById('affectedFeature').value.trim(),
+      clientVersion:       document.getElementById('clientVersion').value.trim(),
+      serverVersion:       document.getElementById('serverVersion').value.trim(),
+      agentVersion:        document.getElementById('agentVersion').value.trim(),
+      detailedDescription: quill.getText().trim() ? quill.root.innerHTML : '',
+      correctiveAction:    document.getElementById('correctiveAction').value.trim(),
+      hotfix:              toggleState.hotfix,
+      rollback:            toggleState.rollback,
+      workaround:          toggleState.workaround,
+      pmCode:              document.getElementById('pm-code').value.trim(),
+      pmTest:              document.getElementById('pm-test').value.trim(),
+      pmProcess:           document.getElementById('pm-process').value.trim(),
+      pmMonitoring:        document.getElementById('pm-monitoring').value.trim(),
+    };
+    formData.append('data', JSON.stringify(fields));
+
+    // Attachments
+    if (attachments.email)   formData.append('receivedEmail', attachments.email);
+    if (attachments.closure) formData.append('responseClosure', attachments.closure);
+    screenshots.forEach((s, i) => formData.append(`screenshot_${i}`, s.file));
+
+    const res = await fetch(isEditing ? `${API}/${editId}` : API, {
+      method: isEditing ? 'PUT' : 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    // Reset form
+    ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
+     'clientVersion','serverVersion','agentVersion'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    quill.setContents([]);
+
+    // Reset attachments
+    ['email','closure'].forEach(t => window.removeFile({ stopPropagation: ()=>{} }, t));
+    screenshots.length = 0;
+    renderScreenshots();
+
+    // Reset edit state
+    window._editingId = null;
+    btn.classList.remove('editing');
+
+    await loadRCA();
+    switchView('reports');
+
+  } catch (err) {
+    console.error('Failed to create/update RCA:', err);
+    // Fallback: try JSON if server doesn't support multipart
+    try {
+      const data = {
+        clientName,
+        priority,
+        description:         document.getElementById('description').value.trim(),
+        event: {
+          raisedBy:        document.getElementById('raisedBy').value.trim(),
+          product:         document.getElementById('product').value.trim(),
+          affectedModule:  document.getElementById('affectedModule').value.trim(),
+          affectedFeature: document.getElementById('affectedFeature').value.trim(),
+        },
+        versions: {
+          client: document.getElementById('clientVersion').value.trim(),
+          server: document.getElementById('serverVersion').value.trim(),
+          agent:  document.getElementById('agentVersion').value.trim(),
+        },
+        detailedDescription: quill.getText().trim() ? quill.root.innerHTML : '',
+        attachments: {
+          receivedEmail:   attachments.email   ? attachments.email.name   : null,
+          responseClosure: attachments.closure ? attachments.closure.name : null,
+          screenshots:     screenshots.map(s => s.file.name),
+        },
+      };
+      await fetch(isEditing ? `${API}/${editId}` : API, {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      // Reset
+      ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
+       'clientVersion','serverVersion','agentVersion'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      quill.setContents([]);
+      screenshots.length = 0;
+      renderScreenshots();
+
+      // Reset edit state
+      window._editingId = null;
+      btn.classList.remove('editing');
+
+      await loadRCA();
+      switchView('reports');
+    } catch (e2) {
+      console.error('JSON fallback also failed:', e2);
+    }
+  } finally {
+    btn.disabled = false;
+    if (window._editingId) {
+      // Edit failed — keep the Update label so user can retry
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Update RCA Report`;
+    } else {
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create RCA Report`;
+      btn.classList.remove('editing');
+    }
+  }
+};
+
+// ── Load ──────────────────────────────────────────────────
+async function loadRCA() {
+  try {
+    const res = await fetch(API);
+    allData   = await res.json();
+    renderRCA(allData);
+    updateStats(allData);
+  } catch (e) {
+    console.error('Failed to load RCA:', e);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────
+function renderRCA(data) {
+  const list  = document.getElementById('list');
+  const empty = document.getElementById('empty-state');
+  list.innerHTML = '';
+
+  if (!data.length) { empty.classList.add('visible'); return; }
+  empty.classList.remove('visible');
+
+  data.forEach((rca, i) => {
+    const p        = getPriority(rca.priority);
+    const product  = rca.event?.product  || rca.product  || '—';
+    const raisedBy = rca.event?.raisedBy || rca.raisedBy || '—';
+    const affectedModule  = rca.event?.affectedModule  || rca.affectedModule  || null;
+    const affectedFeature = rca.event?.affectedFeature || rca.affectedFeature || null;
+    const vc = rca.versions?.client || rca.clientVersion || null;
+    const vs = rca.versions?.server || rca.serverVersion || null;
+    const va = rca.versions?.agent  || rca.agentVersion  || null;
+    const hasVer = vc || vs || va;
+
+    const emailName    = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
+    const closureName  = rca.attachments?.responseClosure || rca.responseClosure || null;
+    const ssNames      = rca.attachments?.screenshots     || rca.screenshots     || [];
+    const hasAttach    = emailName || closureName;
+
+    const dateStr = rca.createdAt
+      ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+      : '';
+
+    const card = document.createElement('div');
+    card.className = 'rca-card';
+    card.style.animationDelay = `${i * 0.04}s`;
+    card.style.setProperty('--priority-color', p.color);
+
+    // Cache so editRCA can look up by ID instead of JSON-in-attribute
+    if (rca._id) rcaCache[rca._id] = rca;
+
+    card.innerHTML = `
+      <div class="card-stripe"></div>
+      <div class="card-body">
+        <div class="card-head">
+          <span class="card-title">${escHtml(rca.title || rca.description || 'Untitled Incident')}</span>
+          <span class="pbadge ${p.cls}">${p.label}</span>
+        </div>
+        <div class="card-meta">
+          <span class="cmeta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${escHtml(rca.clientName)}
+          </span>
+          <span class="cmeta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            ${escHtml(product)}
+          </span>
+          ${affectedModule ? `<span class="cmeta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            ${escHtml(affectedModule)}
+          </span>` : ''}
+          ${affectedFeature ? `<span class="cmeta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            ${escHtml(affectedFeature)}
+          </span>` : ''}
+          <span class="cmeta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            ${escHtml(raisedBy)}
+          </span>
+        </div>
+        ${hasVer ? `
+        <div class="vrow">
+          ${vc ? `<span class="vchip"><span class="vchip-lbl">Client</span>v${escHtml(vc)}</span>` : ''}
+          ${vs ? `<span class="vchip"><span class="vchip-lbl">Server</span>v${escHtml(vs)}</span>` : ''}
+          ${va ? `<span class="vchip"><span class="vchip-lbl">Agent</span>v${escHtml(va)}</span>`  : ''}
+        </div>` : ''}
+        ${rca.description ? `<p class="card-desc">${escHtml(rca.description)}</p>` : ''}
+        ${rca.detailedDescription ? `
+        <div class="card-rich">
+          <div class="ql-snow"><div class="ql-editor card-rich-content">${rca.detailedDescription}</div></div>
+        </div>` : ''}
+        ${hasAttach ? `
+        <div class="card-attachments">
+          ${emailName   ? `<div class="ca-chip email-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${escHtml(emailName)}</span></div>` : ''}
+          ${closureName ? `<div class="ca-chip closure-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>${escHtml(closureName)}</span></div>` : ''}
+        </div>` : ''}
+        ${ssNames.length ? `
+        <div class="card-screenshots">
+          ${ssNames.slice(0,4).map(n => `<div class="cs-thumb"><img src="/uploads/${escHtml(n)}" alt="${escHtml(n)}" onerror="this.parentElement.style.display='none'"></div>`).join('')}
+          ${ssNames.length > 4 ? `<div class="cs-more">+${ssNames.length - 4}</div>` : ''}
+        </div>` : ''}
+      </div>
+      <div class="card-footer">
+        <span class="card-date">${dateStr}</span>
+        <div class="card-footer-actions">
+          <button class="btn-edit" onclick="editRCA('${rca._id}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="btn-del" onclick="deleteRCA('${rca._id}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ── Stats ─────────────────────────────────────────────────
+function updateStats(data) {
+  const c = data.filter(r => r.priority?.toLowerCase() === 'critical').length;
+  const h = data.filter(r => r.priority?.toLowerCase() === 'high').length;
+  document.getElementById('stat-critical').textContent = c;
+  document.getElementById('stat-high').textContent     = h;
+  document.getElementById('stat-total').textContent    = data.length;
+  document.getElementById('tab-count').textContent     = data.length;
+}
+
+// ── Edit ──────────────────────────────────────────────────
+window.editRCA = function (id) {
+  const rca = rcaCache[id];
+  if (!rca) { console.error('editRCA: record not found for id', id); return; }
+
+  // Switch to create view (flag as edit so state isn't wiped)
+  switchView('create', true);
+
+  // Populate scalar fields
+  document.getElementById('clientName').value     = rca.clientName     || '';
+  document.getElementById('priority').value       = rca.priority       || '';
+  document.getElementById('raisedBy').value       = rca.event?.raisedBy || rca.raisedBy || '';
+  document.getElementById('product').value        = rca.event?.product  || rca.product  || '';
+  document.getElementById('affectedModule').value = rca.event?.affectedModule  || rca.affectedModule  || '';
+  document.getElementById('affectedFeature').value= rca.event?.affectedFeature || rca.affectedFeature || '';
+  document.getElementById('description').value    = rca.description    || '';
+  document.getElementById('clientVersion').value  = rca.versions?.client || rca.clientVersion || '';
+  document.getElementById('serverVersion').value  = rca.versions?.server || rca.serverVersion || '';
+  document.getElementById('agentVersion').value   = rca.versions?.agent  || rca.agentVersion  || '';
+
+  // Corrective action fields
+  if (document.getElementById('correctiveAction'))
+    document.getElementById('correctiveAction').value = rca.correctiveAction || '';
+
+  ['pm-code','pm-test','pm-process','pm-monitoring'].forEach(fieldId => {
+    const fieldKey = fieldId.replace('pm-', 'pm');
+    if (document.getElementById(fieldId)) {
+      document.getElementById(fieldId).value = rca[fieldKey] || rca[fieldId] || '';
+    }
+  });
+
+  // Quill rich text
+  if (rca.detailedDescription) {
+    quill.root.innerHTML = rca.detailedDescription;
+  } else {
+    quill.setContents([]);
+  }
+
+  // Toggle states for corrective actions
+  ['hotfix','rollback','workaround'].forEach(key => {
+    const val = rca[key] || toggleState[key];
+    const group = document.getElementById(`toggle-${key}`);
+    if (group) {
+      group.querySelectorAll('.ca-toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === val);
+      });
+      toggleState[key] = val;
+    }
+  });
+
+  // Store the editing ID so submit can use PUT instead of POST
+  window._editingId = rca._id || null;
+
+  // Update submit button label to reflect edit mode
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Update RCA Report`;
+  btn.classList.add('editing');
+
+  // Scroll to top of form
+  document.getElementById('view-create').scrollIntoView({ behavior: 'smooth' });
+};
+
+// ── Delete ────────────────────────────────────────────────
+window.deleteRCA = async function (id) {
+  try {
+    await fetch(`${API}/${id}`, { method: 'DELETE' });
+    await loadRCA();
+  } catch (e) { console.error('Delete failed:', e); }
+};
+
+// ── Utilities ─────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatBytes(b) {
+  if (b < 1024)       return `${b} B`;
+  if (b < 1048576)    return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1048576).toFixed(1)} MB`;
+}
+
+function shake(el) {
+  el.style.animation = 'shk .4s ease';
+  el.addEventListener('animationend', () => { el.style.animation = ''; }, { once: true });
+}
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes shk  { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-6px)} 50%{transform:translateX(6px)} }
+  .hidden { display: none !important; }
+`;
+document.head.appendChild(style);
+
+// ── Init ──────────────────────────────────────────────────
+loadRCA();
