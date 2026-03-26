@@ -31,6 +31,11 @@ function getPriority(v = '') {
 // ── RCA record cache (keyed by _id for safe edit lookups) ─
 const rcaCache = {};
 
+// ── Screenshot dataUrl store (survives server round-trip) ─
+// Maps rca._id → array of { name, dataUrl } so the modal and
+// Word download can show images without hitting /uploads/.
+const ssDataStore = {};
+
 // ── File state ────────────────────────────────────────────
 const attachments = { email: null, closure: null };
 const screenshots = [];   // { file, dataUrl }
@@ -231,6 +236,9 @@ window.createRCA = async function () {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+    // Snapshot dataUrls before clearing — we'll attach them to the cache entry after reload
+    const pendingDataUrls = screenshots.map((s, i) => ({ name: s.file.name, dataUrl: s.dataUrl }));
+
     // Reset form
     ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
      'clientVersion','serverVersion','agentVersion'].forEach(id => {
@@ -248,6 +256,21 @@ window.createRCA = async function () {
     btn.classList.remove('editing');
 
     await loadRCA();
+
+    // Attach the snapshot dataUrls to the freshly cached record
+    if (pendingDataUrls.length) {
+      // Find the record whose screenshot filenames match what we just uploaded
+      const match = allData.find(r => {
+        const names = r.attachments?.screenshots || r.screenshots || [];
+        return pendingDataUrls.every((p, i) => names[i] && names[i].includes(p.name.replace(/\s+/g,'_').split('.')[0]));
+      }) || allData[allData.length - 1]; // fallback: most recent record
+      if (match?._id) {
+        ssDataStore[match._id] = pendingDataUrls;
+        // Merge into cache so viewReport and downloadWordDoc can access them
+        if (rcaCache[match._id]) rcaCache[match._id]._ssDataUrls = pendingDataUrls;
+      }
+    }
+
     switchView('reports');
 
   } catch (err) {
@@ -281,6 +304,7 @@ window.createRCA = async function () {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      const pendingDataUrlsFallback = screenshots.map(s => ({ name: s.file.name, dataUrl: s.dataUrl }));
       // Reset
       ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
        'clientVersion','serverVersion','agentVersion'].forEach(id => {
@@ -295,6 +319,15 @@ window.createRCA = async function () {
       btn.classList.remove('editing');
 
       await loadRCA();
+
+      if (pendingDataUrlsFallback.length) {
+        const match = allData[allData.length - 1];
+        if (match?._id) {
+          ssDataStore[match._id] = pendingDataUrlsFallback;
+          if (rcaCache[match._id]) rcaCache[match._id]._ssDataUrls = pendingDataUrlsFallback;
+        }
+      }
+
       switchView('reports');
     } catch (e2) {
       console.error('JSON fallback also failed:', e2);
@@ -358,7 +391,11 @@ function renderRCA(data) {
     card.style.setProperty('--priority-color', p.color);
 
     // Cache so editRCA can look up by ID instead of JSON-in-attribute
-    if (rca._id) rcaCache[rca._id] = rca;
+    if (rca._id) {
+      rcaCache[rca._id] = rca;
+      // Restore any client-side dataUrls we have for this record
+      if (ssDataStore[rca._id]) rcaCache[rca._id]._ssDataUrls = ssDataStore[rca._id];
+    }
 
     card.innerHTML = `
       <div class="card-stripe"></div>
@@ -414,6 +451,10 @@ function renderRCA(data) {
       <div class="card-footer">
         <span class="card-date">${dateStr}</span>
         <div class="card-footer-actions">
+          <button class="btn-view" onclick="viewReport('${rca._id}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
           <button class="btn-edit" onclick="editRCA('${rca._id}')">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
@@ -534,6 +575,502 @@ style.textContent = `
   .hidden { display: none !important; }
 `;
 document.head.appendChild(style);
+
+// ── View Report Modal ─────────────────────────────────────
+window.viewReport = function (id) {
+  const rca = rcaCache[id];
+  if (!rca) return;
+
+  const p             = getPriority(rca.priority);
+  const product       = rca.event?.product        || rca.product        || '—';
+  const raisedBy      = rca.event?.raisedBy       || rca.raisedBy       || '—';
+  const affectedModule  = rca.event?.affectedModule  || rca.affectedModule  || '—';
+  const affectedFeature = rca.event?.affectedFeature || rca.affectedFeature || '—';
+  const vc = rca.versions?.client || rca.clientVersion || null;
+  const vs = rca.versions?.server || rca.serverVersion || null;
+  const va = rca.versions?.agent  || rca.agentVersion  || null;
+  const emailName   = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
+  const closureName = rca.attachments?.responseClosure || rca.responseClosure || null;
+  const ssNames     = rca.attachments?.screenshots     || rca.screenshots     || [];
+  const dateStr     = rca.createdAt
+    ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
+    : '—';
+
+  const caItems = [
+    rca.hotfix     === 'yes' ? 'Hotfix Applied'    : null,
+    rca.rollback   === 'yes' ? 'Rollback Performed' : null,
+    rca.workaround === 'yes' ? 'Workaround Used'   : null,
+  ].filter(Boolean);
+
+  const pmItems = [
+    rca.pmCode       ? { label: 'Code',       val: rca.pmCode       } : null,
+    rca.pmTest       ? { label: 'Testing',     val: rca.pmTest       } : null,
+    rca.pmProcess    ? { label: 'Process',     val: rca.pmProcess    } : null,
+    rca.pmMonitoring ? { label: 'Monitoring',  val: rca.pmMonitoring } : null,
+  ].filter(Boolean);
+
+  const modal = document.getElementById('report-modal');
+  const body  = document.getElementById('report-modal-body');
+
+  body.innerHTML = `
+    <div class="rm-doc">
+      <!-- Header -->
+      <div class="rm-header" style="--priority-color:${p.color}">
+        <div class="rm-header-bar"></div>
+        <div class="rm-header-content">
+          <div class="rm-eyebrow">Root Cause Analysis Report</div>
+          <h1 class="rm-title">${escHtml(rca.title || rca.description || 'Untitled Incident')}</h1>
+          <div class="rm-meta-row">
+            <span class="rm-badge ${p.cls}">${p.label}</span>
+            <span class="rm-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${dateStr}
+            </span>
+            <span class="rm-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              ${escHtml(rca.clientName || '—')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- §1 Incident Overview -->
+      <div class="rm-section">
+        <div class="rm-section-num">01</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Incident Overview</h2>
+          <div class="rm-grid-4">
+            <div class="rm-field"><span class="rm-label">Client</span><span class="rm-value">${escHtml(rca.clientName || '—')}</span></div>
+            <div class="rm-field"><span class="rm-label">Product</span><span class="rm-value">${escHtml(product)}</span></div>
+            <div class="rm-field"><span class="rm-label">Raised By</span><span class="rm-value">${escHtml(raisedBy)}</span></div>
+            <div class="rm-field"><span class="rm-label">Priority</span><span class="rm-value rm-badge-inline ${p.cls}">${p.label}</span></div>
+            <div class="rm-field"><span class="rm-label">Affected Module</span><span class="rm-value">${escHtml(affectedModule)}</span></div>
+            <div class="rm-field"><span class="rm-label">Affected Feature</span><span class="rm-value">${escHtml(affectedFeature)}</span></div>
+          </div>
+          ${rca.description ? `<div class="rm-desc-block">${escHtml(rca.description)}</div>` : ''}
+        </div>
+      </div>
+
+      <!-- §2 Version Details -->
+      ${(vc || vs || va) ? `
+      <div class="rm-section">
+        <div class="rm-section-num">02</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Version Details</h2>
+          <div class="rm-grid-3">
+            ${vc ? `<div class="rm-field"><span class="rm-label">Client Version</span><span class="rm-value rm-mono">v${escHtml(vc)}</span></div>` : ''}
+            ${vs ? `<div class="rm-field"><span class="rm-label">Server Version</span><span class="rm-value rm-mono">v${escHtml(vs)}</span></div>` : ''}
+            ${va ? `<div class="rm-field"><span class="rm-label">Agent Version</span><span class="rm-value rm-mono">v${escHtml(va)}</span></div>` : ''}
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- §3 Detailed Description -->
+      ${rca.detailedDescription ? `
+      <div class="rm-section">
+        <div class="rm-section-num">03</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Detailed Analysis</h2>
+          <div class="rm-rich-content ql-snow"><div class="ql-editor rm-quill-body">${rca.detailedDescription}</div></div>
+        </div>
+      </div>` : ''}
+
+      <!-- §4 Corrective Actions -->
+      ${(rca.correctiveAction || caItems.length) ? `
+      <div class="rm-section">
+        <div class="rm-section-num">04</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Corrective Actions</h2>
+          ${caItems.length ? `<div class="rm-ca-tags">${caItems.map(c => `<span class="rm-ca-tag">${escHtml(c)}</span>`).join('')}</div>` : ''}
+          ${rca.correctiveAction ? `<div class="rm-desc-block" style="margin-top:12px">${escHtml(rca.correctiveAction)}</div>` : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- §5 Preventive Measures -->
+      ${pmItems.length ? `
+      <div class="rm-section">
+        <div class="rm-section-num">05</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Preventive Measures</h2>
+          <div class="rm-pm-list">
+            ${pmItems.map(pm => `
+              <div class="rm-pm-item">
+                <span class="rm-pm-label">${escHtml(pm.label)}</span>
+                <span class="rm-pm-val">${escHtml(pm.val)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- §6 Reference Screenshots -->
+      ${ssNames.length ? `
+      <div class="rm-section">
+        <div class="rm-section-num">06</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Reference Screenshots</h2>
+          <div class="rm-screenshots">
+            ${ssNames.map((name, i) => {
+              const dataUrl = rca._ssDataUrls?.[i]?.dataUrl;
+              const src = dataUrl ? dataUrl : `/uploads/${escHtml(name)}`;
+              return `
+              <div class="rm-ss-item">
+                <img src="${src}" alt="Screenshot ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Screenshot ${i+1} — ${escHtml(name)}')">
+                <span class="rm-ss-caption">Screenshot ${i+1} — ${escHtml(name)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- §7 Attachments -->
+      ${(emailName || closureName) ? `
+      <div class="rm-section">
+        <div class="rm-section-num">07</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Attachments</h2>
+          <div class="rm-attach-list">
+            ${emailName   ? `<div class="rm-attach-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${escHtml(emailName)}</span></div>` : ''}
+            ${closureName ? `<div class="rm-attach-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>${escHtml(closureName)}</span></div>` : ''}
+          </div>
+        </div>
+      </div>` : ''}
+
+    </div>
+  `;
+
+  // Store current rca id for download
+  modal.dataset.rcaId = id;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeReportModal = function () {
+  document.getElementById('report-modal').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+// Close on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('report-modal').addEventListener('click', function (e) {
+    if (e.target === this) window.closeReportModal();
+  });
+});
+
+// ── Download Word Document ────────────────────────────────
+window.downloadWordDoc = async function () {
+  const modal = document.getElementById('report-modal');
+  const id    = modal.dataset.rcaId;
+  const rca   = rcaCache[id];
+  if (!rca) return;
+
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+          Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, ShadingType } = docx;
+
+  const p             = getPriority(rca.priority);
+  const product       = rca.event?.product        || rca.product        || '—';
+  const raisedBy      = rca.event?.raisedBy       || rca.raisedBy       || '—';
+  const affectedModule  = rca.event?.affectedModule  || rca.affectedModule  || '—';
+  const affectedFeature = rca.event?.affectedFeature || rca.affectedFeature || '—';
+  const vc = rca.versions?.client || rca.clientVersion || null;
+  const vs = rca.versions?.server || rca.serverVersion || null;
+  const va = rca.versions?.agent  || rca.agentVersion  || null;
+  const emailName   = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
+  const closureName = rca.attachments?.responseClosure || rca.responseClosure || null;
+  const ssNames     = rca.attachments?.screenshots     || rca.screenshots     || [];
+  const dateStr     = rca.createdAt
+    ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
+    : '—';
+
+  // Color map for priority
+  const priorityHex = { critical: 'E05C6B', high: 'E89050', medium: 'D4A93A', low: '3DBFA0' };
+  const prioColor   = priorityHex[rca.priority?.toLowerCase()] || '404860';
+
+  function makeHeading(text, level = 1) {
+    return new Paragraph({
+      text,
+      heading: level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
+      spacing: { before: level === 1 ? 360 : 240, after: 120 },
+    });
+  }
+
+  function makeField(label, value) {
+    return new Paragraph({
+      children: [
+        new TextRun({ text: `${label}: `, bold: true, size: 22, color: '374151' }),
+        new TextRun({ text: value || '—', size: 22, color: '111827' }),
+      ],
+      spacing: { after: 80 },
+    });
+  }
+
+  function makeParagraph(text, opts = {}) {
+    return new Paragraph({
+      children: [new TextRun({ text: text || '', size: 22, color: '374151', ...opts })],
+      spacing: { after: 160 },
+    });
+  }
+
+  function makeDivider() {
+    return new Paragraph({
+      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' } },
+      spacing: { after: 200 },
+    });
+  }
+
+  function makeLabel(text) {
+    return new Paragraph({
+      children: [new TextRun({ text, bold: true, size: 24, color: prioColor })],
+      spacing: { before: 200, after: 80 },
+    });
+  }
+
+  // Helper to strip HTML tags for plain text
+  function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.innerText || div.textContent || '';
+  }
+
+  const children = [];
+
+  // ── Title Block ──
+  children.push(new Paragraph({
+    children: [
+      new TextRun({
+        text: 'ROOT CAUSE ANALYSIS REPORT',
+        bold: true, allCaps: true, size: 28,
+        color: prioColor,
+      }),
+    ],
+    spacing: { after: 80 },
+  }));
+
+  children.push(new Paragraph({
+    children: [
+      new TextRun({
+        text: rca.title || rca.description || 'Untitled Incident',
+        bold: true, size: 36,
+        color: '0F172A',
+      }),
+    ],
+    spacing: { after: 160 },
+  }));
+
+  children.push(new Paragraph({
+    children: [
+      new TextRun({ text: `Priority: `, bold: true, size: 22, color: '374151' }),
+      new TextRun({ text: p.label, size: 22, bold: true, color: prioColor }),
+      new TextRun({ text: `   |   Date: `, bold: true, size: 22, color: '374151' }),
+      new TextRun({ text: dateStr, size: 22, color: '374151' }),
+      new TextRun({ text: `   |   Client: `, bold: true, size: 22, color: '374151' }),
+      new TextRun({ text: rca.clientName || '—', size: 22, color: '374151' }),
+    ],
+    spacing: { after: 60 },
+  }));
+
+  children.push(makeDivider());
+
+  // ── §1 Incident Overview ──
+  children.push(makeLabel('01 — INCIDENT OVERVIEW'));
+  children.push(makeField('Client',           rca.clientName));
+  children.push(makeField('Product',          product));
+  children.push(makeField('Raised By',        raisedBy));
+  children.push(makeField('Priority',         p.label));
+  children.push(makeField('Affected Module',  affectedModule));
+  children.push(makeField('Affected Feature', affectedFeature));
+  if (rca.description) {
+    children.push(new Paragraph({
+      children: [new TextRun({ text: 'Description:', bold: true, size: 22, color: '374151' })],
+      spacing: { before: 120, after: 60 },
+    }));
+    children.push(makeParagraph(rca.description));
+  }
+  children.push(makeDivider());
+
+  // ── §2 Versions ──
+  if (vc || vs || va) {
+    children.push(makeLabel('02 — VERSION DETAILS'));
+    if (vc) children.push(makeField('Client Version', `v${vc}`));
+    if (vs) children.push(makeField('Server Version', `v${vs}`));
+    if (va) children.push(makeField('Agent Version',  `v${va}`));
+    children.push(makeDivider());
+  }
+
+  // ── §3 Detailed Description ──
+  if (rca.detailedDescription) {
+    children.push(makeLabel('03 — DETAILED ANALYSIS'));
+    const plainText = stripHtml(rca.detailedDescription);
+    plainText.split('\n').forEach(line => {
+      if (line.trim()) children.push(makeParagraph(line.trim()));
+    });
+    children.push(makeDivider());
+  }
+
+  // ── §4 Corrective Actions ──
+  const caItems = [
+    rca.hotfix     === 'yes' ? 'Hotfix Applied'     : null,
+    rca.rollback   === 'yes' ? 'Rollback Performed'  : null,
+    rca.workaround === 'yes' ? 'Workaround Used'    : null,
+  ].filter(Boolean);
+
+  if (rca.correctiveAction || caItems.length) {
+    children.push(makeLabel('04 — CORRECTIVE ACTIONS'));
+    if (caItems.length) {
+      children.push(makeParagraph(`Actions taken: ${caItems.join(', ')}`));
+    }
+    if (rca.correctiveAction) children.push(makeParagraph(rca.correctiveAction));
+    children.push(makeDivider());
+  }
+
+  // ── §5 Preventive Measures ──
+  const pmItems = [
+    rca.pmCode       ? { label: 'Code',      val: rca.pmCode       } : null,
+    rca.pmTest       ? { label: 'Testing',   val: rca.pmTest       } : null,
+    rca.pmProcess    ? { label: 'Process',   val: rca.pmProcess    } : null,
+    rca.pmMonitoring ? { label: 'Monitoring',val: rca.pmMonitoring } : null,
+  ].filter(Boolean);
+
+  if (pmItems.length) {
+    children.push(makeLabel('05 — PREVENTIVE MEASURES'));
+    pmItems.forEach(pm => children.push(makeField(pm.label, pm.val)));
+    children.push(makeDivider());
+  }
+
+  // ── §6 Screenshots (embed if accessible) ──
+  const imageChildren = [];
+  for (let idx = 0; idx < ssNames.length; idx++) {
+    const name = ssNames[idx];
+    try {
+      let buffer;
+      let imgType;
+
+      const dataUrl = rca._ssDataUrls?.[idx]?.dataUrl;
+      if (dataUrl) {
+        // Convert base64 dataUrl directly to ArrayBuffer
+        const base64 = dataUrl.split(',')[1];
+        const mime   = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        const typeMap = { 'image/jpeg':'jpeg', 'image/jpg':'jpeg', 'image/png':'png', 'image/gif':'gif', 'image/webp':'webp' };
+        imgType = typeMap[mime] || 'jpeg';
+        const binary = atob(base64);
+        const bytes  = new Uint8Array(binary.length);
+        for (let b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
+        buffer = bytes.buffer;
+      } else {
+        const res = await fetch(`/uploads/${name}`);
+        if (!res.ok) throw new Error('not found');
+        const blob = await res.blob();
+        buffer = await blob.arrayBuffer();
+        const ext = name.split('.').pop().toLowerCase();
+        const extMap = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
+        imgType = extMap[ext] || 'jpeg';
+      }
+
+      imageChildren.push(new Paragraph({
+        children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
+        spacing: { after: 80 },
+      }));
+      imageChildren.push(new Paragraph({
+        children: [new TextRun({ text: name, size: 18, color: '9CA3AF', italics: true })],
+        spacing: { after: 200 },
+      }));
+    } catch (_) {
+      imageChildren.push(makeParagraph(`[Image: ${name}]`));
+    }
+  }
+
+  if (imageChildren.length) {
+    children.push(makeLabel('06 — REFERENCE SCREENSHOTS'));
+    children.push(...imageChildren);
+    children.push(makeDivider());
+  }
+
+  // ── §7 Attachments ──
+  if (emailName || closureName) {
+    children.push(makeLabel('07 — ATTACHMENTS'));
+    if (emailName)   children.push(makeField('Received Email',   emailName));
+    if (closureName) children.push(makeField('Response Closure', closureName));
+    children.push(makeDivider());
+  }
+
+  // ── Footer ──
+  children.push(new Paragraph({
+    children: [
+      new TextRun({ text: `Generated by RCA Manager  ·  ${new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })}`, size: 18, color: '9CA3AF', italics: true }),
+    ],
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 200 },
+  }));
+
+  const doc = new Document({
+    creator: 'RCA Manager',
+    title: rca.title || rca.description || 'RCA Report',
+    description: 'Root Cause Analysis Report',
+    styles: {
+      default: {
+        document: {
+          run: { font: 'Calibri', size: 22, color: '111827' },
+          paragraph: { spacing: { line: 276 } },
+        },
+      },
+    },
+    sections: [{
+      properties: {
+        page: { margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 } },
+      },
+      children,
+    }],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `RCA_${(rca.clientName || 'report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// ── Theme Toggle ──────────────────────────────────────────
+(function initTheme() {
+  const saved = localStorage.getItem('rca-theme');
+  if (saved === 'light') document.body.classList.add('light');
+})();
+
+window.toggleTheme = function () {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('rca-theme', isLight ? 'light' : 'dark');
+};
+
+// ── Lightbox ──────────────────────────────────────────────
+window.openLightbox = function (src, caption) {
+  const overlay = document.getElementById('lightbox');
+  const img     = document.getElementById('lightbox-img');
+  const cap     = document.getElementById('lightbox-caption');
+  img.src       = src;
+  cap.textContent = caption || '';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeLightbox = function () {
+  document.getElementById('lightbox').classList.remove('open');
+  // Only restore scroll if report modal is also closed
+  if (!document.getElementById('report-modal').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
+};
+
+// Close lightbox on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('lightbox').classList.contains('open')) {
+      window.closeLightbox();
+    } else {
+      window.closeReportModal();
+    }
+  }
+});
 
 // ── Init ──────────────────────────────────────────────────
 loadRCA();
