@@ -37,38 +37,72 @@ const rcaCache = {};
 const ssDataStore = {};
 
 // ── File state ────────────────────────────────────────────
-const attachments = { email: null, closure: null };
-const screenshots = [];   // { file, dataUrl }
+const emailImages   = [];  // { file, dataUrl }
+const screenshots   = [];  // { file, dataUrl }
+const closureImages = [];  // { file, dataUrl }
 
-// ── Dropzone helpers ──────────────────────────────────────
-window.handleFileSelect = function (e, type) {
-  const file = e.target.files?.[0];
-  if (file) setAttachment(type, file);
+
+// ── Email image helpers ───────────────────────────────────
+window.handleEmailImages = function (e) {
+  const files = Array.from(e.target.files || []);
+  files.forEach(addEmailImage);
+  e.target.value = '';
 };
 
-window.handleDrop = function (e, type) {
+window.handleEmailDrop = function (e) {
   e.preventDefault();
-  document.getElementById(`dz-${type}`).classList.remove('drag-over');
-  const file = e.dataTransfer.files?.[0];
-  if (file) setAttachment(type, file);
+  document.getElementById('dz-email').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+  files.forEach(addEmailImage);
 };
 
-function setAttachment(type, file) {
-  attachments[type] = file;
-  const idle    = document.getElementById(`dz-${type}-idle`);
-  const preview = document.getElementById(`dz-${type}-preview`);
-  document.getElementById(`dp-${type}-name`).textContent = file.name;
-  document.getElementById(`dp-${type}-size`).textContent = formatBytes(file.size);
-  idle.classList.add('hidden');
-  preview.classList.remove('hidden');
+function addEmailImage(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    emailImages.push({ file, dataUrl: ev.target.result });
+    renderEmailImages();
+  };
+  reader.readAsDataURL(file);
 }
 
-window.removeFile = function (e, type) {
-  e.stopPropagation();
-  attachments[type] = null;
-  document.getElementById(`file-${type}`).value = '';
-  document.getElementById(`dz-${type}-idle`).classList.remove('hidden');
-  document.getElementById(`dz-${type}-preview`).classList.add('hidden');
+function renderEmailImages() {
+  const grid = document.getElementById('email-grid');
+  const dz   = document.getElementById('dz-email');
+  grid.innerHTML = '';
+
+  if (emailImages.length > 0) {
+    dz.classList.add('has-files');
+  } else {
+    dz.classList.remove('has-files');
+  }
+
+  emailImages.forEach((s, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'ss-thumb';
+    thumb.innerHTML = `
+      <img src="${s.dataUrl}" alt="email ${i+1}">
+      <button class="ss-thumb-remove" onclick="removeEmailImage(${i})" title="Remove">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  if (emailImages.length > 0) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'ss-add-more';
+    addBtn.title = 'Add more';
+    addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    addBtn.onclick = () => document.getElementById('file-email').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+window.removeEmailImage = function (i) {
+  emailImages.splice(i, 1);
+  renderEmailImages();
 };
 
 // ── Screenshot helpers ────────────────────────────────────
@@ -133,6 +167,69 @@ function renderScreenshots() {
 window.removeScreenshot = function (i) {
   screenshots.splice(i, 1);
   renderScreenshots();
+};
+
+// ── Closure image helpers ─────────────────────────────────
+window.handleClosureImages = function (e) {
+  const files = Array.from(e.target.files || []);
+  files.forEach(addClosureImage);
+  e.target.value = '';
+};
+
+window.handleClosureDrop = function (e) {
+  e.preventDefault();
+  document.getElementById('dz-closure').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+  files.forEach(addClosureImage);
+};
+
+function addClosureImage(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    closureImages.push({ file, dataUrl: ev.target.result });
+    renderClosureImages();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderClosureImages() {
+  const grid = document.getElementById('closure-grid');
+  const dz   = document.getElementById('dz-closure');
+  grid.innerHTML = '';
+
+  if (closureImages.length > 0) {
+    dz.classList.add('has-files');
+  } else {
+    dz.classList.remove('has-files');
+  }
+
+  closureImages.forEach((s, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'ss-thumb';
+    thumb.innerHTML = `
+      <img src="${s.dataUrl}" alt="closure ${i+1}">
+      <button class="ss-thumb-remove" onclick="removeClosureImage(${i})" title="Remove">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  if (closureImages.length > 0) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'ss-add-more';
+    addBtn.title = 'Add more';
+    addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    addBtn.onclick = () => document.getElementById('file-closure').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+window.removeClosureImage = function (i) {
+  closureImages.splice(i, 1);
+  renderClosureImages();
 };
 
 // ── View switching ────────────────────────────────────────
@@ -225,8 +322,8 @@ window.createRCA = async function () {
     formData.append('data', JSON.stringify(fields));
 
     // Attachments
-    if (attachments.email)   formData.append('receivedEmail', attachments.email);
-    if (attachments.closure) formData.append('responseClosure', attachments.closure);
+    emailImages.forEach((s, i) => formData.append(`emailImage_${i}`, s.file));
+    closureImages.forEach((s, i) => formData.append(`closureImage_${i}`, s.file));
     screenshots.forEach((s, i) => formData.append(`screenshot_${i}`, s.file));
 
     const res = await fetch(isEditing ? `${API}/${editId}` : API, {
@@ -247,7 +344,10 @@ window.createRCA = async function () {
     quill.setContents([]);
 
     // Reset attachments
-    ['email','closure'].forEach(t => window.removeFile({ stopPropagation: ()=>{} }, t));
+    emailImages.length = 0;
+    renderEmailImages();
+    closureImages.length = 0;
+    renderClosureImages();
     screenshots.length = 0;
     renderScreenshots();
 
@@ -294,9 +394,9 @@ window.createRCA = async function () {
         },
         detailedDescription: quill.getText().trim() ? quill.root.innerHTML : '',
         attachments: {
-          receivedEmail:   attachments.email   ? attachments.email.name   : null,
-          responseClosure: attachments.closure ? attachments.closure.name : null,
-          screenshots:     screenshots.map(s => s.file.name),
+          emailImages:   emailImages.map(s => s.file.name),
+          closureImages: closureImages.map(s => s.file.name),
+          screenshots:   screenshots.map(s => s.file.name),
         },
       };
       await fetch(isEditing ? `${API}/${editId}` : API, {
@@ -311,6 +411,10 @@ window.createRCA = async function () {
         document.getElementById(id).value = '';
       });
       quill.setContents([]);
+      emailImages.length = 0;
+      renderEmailImages();
+      closureImages.length = 0;
+      renderClosureImages();
       screenshots.length = 0;
       renderScreenshots();
 
@@ -728,10 +832,40 @@ window.viewReport = function (id) {
       <div class="rm-section">
         <div class="rm-section-num">07</div>
         <div class="rm-section-body">
-          <h2 class="rm-section-title">Attachments</h2>
-          <div class="rm-attach-list">
-            ${emailName   ? `<div class="rm-attach-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${escHtml(emailName)}</span></div>` : ''}
-            ${closureName ? `<div class="rm-attach-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>${escHtml(closureName)}</span></div>` : ''}
+          <h2 class="rm-section-title">Email Correspondence</h2>
+          <div class="rm-email-list">
+            ${emailName ? `
+            <div class="rm-email-card rm-email-received">
+              <div class="rm-email-card-header">
+                <div class="rm-email-icon-wrap received">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="rm-email-meta">
+                  <span class="rm-email-type">Received Email</span>
+                  <span class="rm-email-dir-badge received-badge">↓ Inbound</span>
+                </div>
+              </div>
+              <div class="rm-email-filename">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                ${escHtml(emailName)}
+              </div>
+            </div>` : ''}
+            ${closureName ? `
+            <div class="rm-email-card rm-email-responded">
+              <div class="rm-email-card-header">
+                <div class="rm-email-icon-wrap responded">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                </div>
+                <div class="rm-email-meta">
+                  <span class="rm-email-type">Response &amp; Closure</span>
+                  <span class="rm-email-dir-badge responded-badge">↑ Outbound</span>
+                </div>
+              </div>
+              <div class="rm-email-filename">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                ${escHtml(closureName)}
+              </div>
+            </div>` : ''}
           </div>
         </div>
       </div>` : ''}
@@ -765,7 +899,7 @@ window.downloadWordDoc = async function () {
   if (!rca) return;
 
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-          Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, ShadingType } = docx;
+          Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, ShadingType } = window.docx;
 
   const p             = getPriority(rca.priority);
   const product       = rca.event?.product        || rca.product        || '—';
@@ -795,13 +929,19 @@ window.downloadWordDoc = async function () {
   }
 
   function makeField(label, value) {
+    if (!value || value === '—') return null;
     return new Paragraph({
       children: [
         new TextRun({ text: `${label}: `, bold: true, size: 22, color: '374151' }),
-        new TextRun({ text: value || '—', size: 22, color: '111827' }),
+        new TextRun({ text: value, size: 22, color: '111827' }),
       ],
       spacing: { after: 80 },
     });
+  }
+
+  function pushField(arr, label, value) {
+    const f = makeField(label, value);
+    if (f) arr.push(f);
   }
 
   function makeParagraph(text, opts = {}) {
@@ -873,12 +1013,12 @@ window.downloadWordDoc = async function () {
 
   // ── §1 Incident Overview ──
   children.push(makeLabel('01 — INCIDENT OVERVIEW'));
-  children.push(makeField('Client',           rca.clientName));
-  children.push(makeField('Product',          product));
-  children.push(makeField('Raised By',        raisedBy));
-  children.push(makeField('Priority',         p.label));
-  children.push(makeField('Affected Module',  affectedModule));
-  children.push(makeField('Affected Feature', affectedFeature));
+  pushField(children, 'Client',           rca.clientName);
+  pushField(children, 'Product',          product !== '—' ? product : null);
+  pushField(children, 'Raised By',        raisedBy !== '—' ? raisedBy : null);
+  pushField(children, 'Priority',         p.label);
+  pushField(children, 'Affected Module',  affectedModule !== '—' ? affectedModule : null);
+  pushField(children, 'Affected Feature', affectedFeature !== '—' ? affectedFeature : null);
   if (rca.description) {
     children.push(new Paragraph({
       children: [new TextRun({ text: 'Description:', bold: true, size: 22, color: '374151' })],
@@ -891,9 +1031,9 @@ window.downloadWordDoc = async function () {
   // ── §2 Versions ──
   if (vc || vs || va) {
     children.push(makeLabel('02 — VERSION DETAILS'));
-    if (vc) children.push(makeField('Client Version', `v${vc}`));
-    if (vs) children.push(makeField('Server Version', `v${vs}`));
-    if (va) children.push(makeField('Agent Version',  `v${va}`));
+    if (vc) pushField(children, 'Client Version', `v${vc}`);
+    if (vs) pushField(children, 'Server Version', `v${vs}`);
+    if (va) pushField(children, 'Agent Version',  `v${va}`);
     children.push(makeDivider());
   }
 
@@ -933,22 +1073,34 @@ window.downloadWordDoc = async function () {
 
   if (pmItems.length) {
     children.push(makeLabel('05 — PREVENTIVE MEASURES'));
-    pmItems.forEach(pm => children.push(makeField(pm.label, pm.val)));
+    pmItems.forEach(pm => pushField(children, pm.label, pm.val));
     children.push(makeDivider());
   }
 
   // ── §6 Screenshots (embed if accessible) ──
   const imageChildren = [];
+  // Build a name→dataUrl map for flexible lookup
+  const ssDataUrlMap = {};
+  if (rca._ssDataUrls && Array.isArray(rca._ssDataUrls)) {
+    rca._ssDataUrls.forEach((entry, idx) => {
+      if (entry?.dataUrl) {
+        ssDataUrlMap[idx] = entry.dataUrl;
+        if (entry.name) ssDataUrlMap[entry.name] = entry.dataUrl;
+      }
+    });
+  }
+
   for (let idx = 0; idx < ssNames.length; idx++) {
     const name = ssNames[idx];
     try {
       let buffer;
       let imgType;
 
-      const dataUrl = rca._ssDataUrls?.[idx]?.dataUrl;
+      // Try index-based lookup first, then name-based, then fetch
+      const dataUrl = ssDataUrlMap[idx] || ssDataUrlMap[name];
       if (dataUrl) {
-        // Convert base64 dataUrl directly to ArrayBuffer
         const base64 = dataUrl.split(',')[1];
+        if (!base64) throw new Error('invalid dataUrl');
         const mime   = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
         const typeMap = { 'image/jpeg':'jpeg', 'image/jpg':'jpeg', 'image/png':'png', 'image/gif':'gif', 'image/webp':'webp' };
         imgType = typeMap[mime] || 'jpeg';
@@ -975,7 +1127,7 @@ window.downloadWordDoc = async function () {
         spacing: { after: 200 },
       }));
     } catch (_) {
-      imageChildren.push(makeParagraph(`[Image: ${name}]`));
+      imageChildren.push(makeParagraph(`[Image unavailable: ${name}]`));
     }
   }
 

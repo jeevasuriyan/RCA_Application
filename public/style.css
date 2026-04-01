@@ -65,6 +65,171 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Animated Background Canvas ── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Background orbs / aurora blobs ── */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0;
+  animation: orbFloat var(--dur, 20s) ease-in-out var(--delay, 0s) infinite;
+}
+
+.bg-orb-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+  top: -200px; left: -100px;
+  --dur: 22s; --delay: 0s;
+  animation-name: orbFloat1;
+}
+.bg-orb-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+  bottom: -150px; right: -100px;
+  --dur: 28s; --delay: -8s;
+  animation-name: orbFloat2;
+}
+.bg-orb-3 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(96,130,220,0.06) 0%, transparent 70%);
+  top: 40%; left: 60%;
+  --dur: 18s; --delay: -4s;
+  animation-name: orbFloat3;
+}
+.bg-orb-4 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+  top: 25%; right: 15%;
+  --dur: 24s; --delay: -12s;
+  animation-name: orbFloat4;
+}
+
+@keyframes orbFloat1 {
+  0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+  10%  { opacity: 1; }
+  50%  { transform: translate(80px, 120px) scale(1.15); }
+  90%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0) scale(1); }
+}
+@keyframes orbFloat2 {
+  0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+  10%  { opacity: 1; }
+  50%  { transform: translate(-60px, -90px) scale(1.1); }
+  90%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0) scale(1); }
+}
+@keyframes orbFloat3 {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.9); }
+  15%  { opacity: 1; }
+  50%  { transform: translate(-40px, 60px) scale(1.2); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0) scale(0.9); }
+}
+@keyframes orbFloat4 {
+  0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+  12%  { opacity: 1; }
+  50%  { transform: translate(30px, -50px) scale(1.1); }
+  88%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0) scale(1); }
+}
+
+/* ── Grid / dot pattern ── */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+/* ── Scanning beam line ── */
+.bg-scanline {
+  position: fixed;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.15) 30%, rgba(201,168,76,0.35) 50%, rgba(201,168,76,0.15) 70%, transparent);
+  z-index: 0;
+  pointer-events: none;
+  animation: scanBeam 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0;
+  top: 0;
+}
+
+@keyframes scanBeam {
+  0%   { top: 10%; opacity: 0; }
+  5%   { opacity: 1; }
+  90%  { opacity: 0.6; }
+  95%  { opacity: 0; }
+  100% { top: 90%; opacity: 0; }
+}
+
+/* ── Corner accent glows ── */
+.bg-corner-tl, .bg-corner-br {
+  position: fixed;
+  width: 300px; height: 300px;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-corner-tl {
+  top: 0; left: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(201,168,76,0.07) 0%, transparent 60%);
+}
+.bg-corner-br {
+  bottom: 0; right: 0;
+  background: radial-gradient(circle at 100% 100%, rgba(201,168,76,0.06) 0%, transparent 60%);
+}
+
+/* ── Floating particles ── */
+.bg-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  animation: particleDrift var(--pd, 15s) ease-in-out var(--pdelay, 0s) infinite;
+}
+
+@keyframes particleDrift {
+  0%   { opacity: 0; transform: translateY(0px) translateX(0px); }
+  10%  { opacity: 0.6; }
+  80%  { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-120px) translateX(var(--px, 20px)); }
+}
+
+/* Ensure all page content sits above background layers */
+.navbar, .view, .noise-overlay {
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Noise texture ── */
@@ -724,6 +889,8 @@ option { background: var(--bg-3); color: var(--ink); }
   margin-bottom: 4px;
 }
 .screenshots-icon-color { color: var(--gold); }
+.closure-icon-color { color: var(--accent); }
+.email-icon-color { color: var(--teal, #3dbfa0); }
 
 .dz-main {
   font-size: 13px;
@@ -1577,6 +1744,33 @@ body.light .navbar {
   background: rgba(232,234,242,0.90);
 }
 
+body.light .bg-grid {
+  background-image:
+    linear-gradient(rgba(180,148,60,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,148,60,0.07) 1px, transparent 1px);
+}
+
+body.light .bg-orb-1 {
+  background: radial-gradient(circle, rgba(201,168,76,0.10) 0%, transparent 70%);
+}
+body.light .bg-orb-2 {
+  background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+}
+body.light .bg-orb-3 {
+  background: radial-gradient(circle, rgba(80,110,200,0.05) 0%, transparent 70%);
+}
+body.light .bg-orb-4 {
+  background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+}
+
+body.light .bg-scanline {
+  background: linear-gradient(90deg, transparent, rgba(160,120,40,0.10) 30%, rgba(160,120,40,0.22) 50%, rgba(160,120,40,0.10) 70%, transparent);
+}
+
+body.light .bg-particle {
+  background: #a07828;
+}
+
 body.light .rm-ss-item img {
   background: #d8dbe8;
 }
@@ -1677,3 +1871,89 @@ body.light .theme-icon-dark { display: none; }
   transition: opacity 0.15s var(--ease);
 }
 .rm-ss-item img:hover { opacity: 0.88; }
+/* ── Email Correspondence Cards ────────────────────────── */
+.rm-email-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rm-email-card {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: box-shadow var(--t);
+}
+.rm-email-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+.rm-email-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.rm-email-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.rm-email-icon-wrap.received {
+  background: rgba(99, 179, 237, 0.15);
+  color: #63b3ed;
+}
+.rm-email-icon-wrap.responded {
+  background: rgba(72, 199, 142, 0.15);
+  color: #48c78e;
+}
+.rm-email-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.rm-email-type {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.rm-email-dir-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+.received-badge {
+  background: rgba(99, 179, 237, 0.15);
+  color: #63b3ed;
+}
+.responded-badge {
+  background: rgba(72, 199, 142, 0.15);
+  color: #48c78e;
+}
+.rm-email-filename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.rm-email-filename svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* Light mode overrides */
+.light .rm-email-icon-wrap.received { background: rgba(49, 130, 206, 0.1); color: #3182ce; }
+.light .rm-email-icon-wrap.responded { background: rgba(38, 153, 96, 0.1); color: #276749; }
+.light .received-badge { background: rgba(49,130,206,0.1); color: #3182ce; }
+.light .responded-badge { background: rgba(38,153,96,0.1); color: #276749; }
