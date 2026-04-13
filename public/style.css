@@ -38,7 +38,7 @@
   --low-bg:     rgba(61,191,160,0.1);
 
   /* System */
-  --nav-h:      60px;
+  --nav-h:      66px;
   --r:          14px;
   --r-sm:       8px;
   --r-xs:       5px;
@@ -275,21 +275,21 @@ body {
 }
 
 .brand-glyph {
-  width: 34px; height: 34px;
+  width: 36px; height: 36px;
   background: linear-gradient(135deg, var(--gold), #a07828);
-  border-radius: 9px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   color: #0e1117;
   flex-shrink: 0;
-  box-shadow: 0 0 20px rgba(201,168,76,0.25);
+  box-shadow: 0 2px 12px rgba(201,168,76,0.3), 0 0 0 1px rgba(201,168,76,0.15);
 }
 
 .brand-wordmark {
   font-family: 'DM Serif Display', serif;
-  font-size: 17px;
+  font-size: 18px;
   color: var(--ink);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
 }
 .brand-wordmark em {
   font-style: italic;
@@ -680,27 +680,35 @@ body {
 }
 
 .fcs-num {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
   color: var(--gold);
-  opacity: 0.5;
+  opacity: 0.8;
   min-width: 36px;
-  margin-top: 2px;
+  margin-top: 4px;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-b);
+  border-radius: 6px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  height: fit-content;
 }
 
 .fcs-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--ink);
-  letter-spacing: -0.2px;
-  margin-bottom: 3px;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
 }
 
 .fcs-sub {
   font-size: 12.5px;
   color: var(--ink-3);
   font-weight: 400;
+  line-height: 1.5;
 }
 
 /* Grid layouts */
@@ -730,7 +738,7 @@ body {
   background: var(--bg-3);
   border: 1px solid var(--glass-b);
   border-radius: var(--r-sm);
-  padding: 10px 13px;
+  padding: 11px 14px;
   color: var(--ink);
   font-family: 'DM Sans', sans-serif;
   font-size: 13.5px;
@@ -743,6 +751,9 @@ body {
   border-color: var(--gold-b);
   background: var(--bg-4);
   box-shadow: 0 0 0 3px var(--gold-glow);
+}
+.fi:hover:not(:focus) {
+  border-color: var(--glass-b2);
 }
 
 .ftarea { resize: vertical; min-height: 72px; line-height: 1.65; }
@@ -1016,7 +1027,7 @@ option { background: var(--bg-3); color: var(--ink); }
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 12px 28px;
+  padding: 13px 32px;
   background: linear-gradient(135deg, var(--gold), #a87c2a);
   color: #0e1117;
   border: none;
@@ -1026,15 +1037,15 @@ option { background: var(--bg-3); color: var(--ink); }
   font-weight: 700;
   cursor: pointer;
   transition: transform var(--t), box-shadow var(--t), filter var(--t);
-  box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  box-shadow: 0 4px 20px rgba(201,168,76,0.3), 0 1px 3px rgba(0,0,0,0.2);
   letter-spacing: -0.1px;
 }
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(201,168,76,0.4);
-  filter: brightness(1.05);
+  box-shadow: 0 8px 32px rgba(201,168,76,0.45), 0 2px 6px rgba(0,0,0,0.2);
+  filter: brightness(1.06);
 }
-.btn-create:active { transform: translateY(0); }
+.btn-create:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(201,168,76,0.25); }
 .btn-create:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 /* ════════════════════════════════════════
@@ -1150,8 +1161,12 @@ option { background: var(--bg-3); color: var(--ink); }
 
 .card-title {
   font-size: 14px; font-weight: 700; color: var(--ink);
-  line-height: 1.4; flex: 1;
+  line-height: 1.45; flex: 1;
   font-family: 'DM Sans', sans-serif;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Priority badge */
@@ -1256,13 +1271,13 @@ option { background: var(--bg-3); color: var(--ink); }
 
 .btn-edit {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 11px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid rgba(201,168,76,.25);
-  border-radius: var(--r-xs);
-  color: rgba(201,168,76,.7);
+  border-radius: 6px;
+  color: rgba(201,168,76,.75);
   font-family: 'DM Sans', sans-serif;
-  font-size: 11.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   cursor: pointer; transition: all var(--t);
 }
 .btn-edit:hover { background: var(--gold-dim); border-color: var(--gold-b); color: var(--gold); }
@@ -1277,20 +1292,21 @@ option { background: var(--bg-3); color: var(--ink); }
   justify-content: center;
 }
 .hero-inner--centered .hero-eyebrow {
-  font-size: 13px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  letter-spacing: 2.5px;
   font-weight: 600;
+  margin-bottom: 10px;
 }
 
 .btn-del {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 11px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid rgba(224,92,107,.18);
-  border-radius: var(--r-xs);
-  color: rgba(224,92,107,.6);
+  border-radius: 6px;
+  color: rgba(224,92,107,.65);
   font-family: 'DM Sans', sans-serif;
-  font-size: 11.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   cursor: pointer; transition: all var(--t);
 }
 .btn-del:hover { background: var(--crit-bg); border-color: rgba(224,92,107,.35); color: var(--crit); }
@@ -1371,13 +1387,13 @@ option { background: var(--bg-3); color: var(--ink); }
 ════════════════════════════════════════ */
 .btn-view {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 11px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid rgba(91,156,246,.25);
-  border-radius: var(--r-xs);
-  color: rgba(91,156,246,.75);
+  border-radius: 6px;
+  color: rgba(91,156,246,.8);
   font-family: 'DM Sans', sans-serif;
-  font-size: 11.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   cursor: pointer; transition: all var(--t);
 }
 .btn-view:hover {
@@ -1664,29 +1680,28 @@ option { background: var(--bg-3); color: var(--ink); }
 }
 .rm-pm-val { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
 
-/* Screenshots */
-.rm-screenshots { display: flex; flex-direction: column; gap: 20px; }
+/* Screenshots — thumbnail grid */
+.rm-screenshots { display: flex; flex-wrap: wrap; gap: 10px; }
 .rm-ss-item {
-  display: flex; flex-direction: column; gap: 8px;
-  background: var(--bg-3);
-  border: 1px solid var(--glass-b);
+  width: 120px;
+  height: 90px;
   border-radius: var(--r-sm);
   overflow: hidden;
+  border: 1px solid var(--glass-b);
+  background: var(--bg-3);
+  flex-shrink: 0;
+  position: relative;
 }
 .rm-ss-item img {
   width: 100%;
-  max-height: 380px;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  background: #0a0c12;
+  cursor: zoom-in;
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
 }
-.rm-ss-caption {
-  padding: 8px 14px;
-  font-size: 11px;
-  color: var(--ink-4);
-  font-family: 'JetBrains Mono', monospace;
-  border-top: 1px solid var(--glass-b);
-}
+.rm-ss-item img:hover { opacity: 0.82; transform: scale(1.04); }
+.rm-ss-caption { display: none; }
 
 /* Attachments */
 .rm-attach-list { display: flex; flex-direction: column; gap: 8px; }
@@ -1865,12 +1880,6 @@ body.light .theme-icon-dark { display: none; }
   color: #fff;
 }
 
-/* Make report images clickable */
-.rm-ss-item img {
-  cursor: zoom-in;
-  transition: opacity 0.15s var(--ease);
-}
-.rm-ss-item img:hover { opacity: 0.88; }
 /* ── Email Correspondence Cards ────────────────────────── */
 .rm-email-list {
   display: flex;
@@ -1951,9 +1960,259 @@ body.light .theme-icon-dark { display: none; }
   flex-shrink: 0;
   opacity: 0.6;
 }
+.rm-email-img-wrap {
+  padding: 0 16px 14px;
+}
+.rm-email-img-wrap img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: zoom-in;
+  display: block;
+  border: 1px solid var(--glass-b);
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.rm-email-img-wrap img:hover { opacity: 0.82; transform: scale(1.04); }
 
 /* Light mode overrides */
 .light .rm-email-icon-wrap.received { background: rgba(49, 130, 206, 0.1); color: #3182ce; }
 .light .rm-email-icon-wrap.responded { background: rgba(38, 153, 96, 0.1); color: #276749; }
 .light .received-badge { background: rgba(49,130,206,0.1); color: #3182ce; }
 .light .responded-badge { background: rgba(38,153,96,0.1); color: #276749; }
+/* ════════════════════════════════════════
+   PROFESSIONAL REFINEMENTS
+════════════════════════════════════════ */
+
+/* Disable the sci-fi scanline — too decorative for enterprise use */
+.bg-scanline { animation: none; opacity: 0; pointer-events: none; }
+
+/* Tone down background orbs for a cleaner, more corporate look */
+.bg-orbs { opacity: 0.55; }
+
+/* ── Hero section: proper page title ─────────────────────── */
+.hero-title-main {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.6;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+body.light .hero-subtitle {
+  color: var(--ink-3);
+}
+
+/* ── Improved hero padding ────────────────────────────────── */
+.hero-inner {
+  padding: 28px 40px;
+}
+
+/* ── Tighter, more refined section header gap ─────────────── */
+.fcs-header {
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+/* ── Refined form card spacing ────────────────────────────── */
+.fcard-section { padding: 34px 40px; }
+.fcard-divider { margin: 0 40px; }
+.fcard-footer  { padding: 24px 40px; }
+
+/* ── Better card body spacing ────────────────────────────── */
+.card-body { padding: 20px 24px 16px; gap: 12px; }
+.card-footer { padding: 12px 24px 16px; }
+
+/* ── Refined rca-card hover ──────────────────────────────── */
+.rca-card:hover {
+  border-color: var(--gold-b);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.08);
+  transform: translateY(-2px);
+}
+
+/* ── Reports header refinement ───────────────────────────── */
+.rh-title {
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+
+/* ── Search bar refinement ───────────────────────────────── */
+.searchbar {
+  border-radius: var(--r-sm);
+  padding: 10px 16px;
+}
+
+/* ── Better filter pills ─────────────────────────────────── */
+.pf {
+  padding: 7px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ── Card priority stripe refinement ─────────────────────── */
+.card-stripe { height: 3px; }
+
+/* ── Improved card meta readability ─────────────────────── */
+.cmeta {
+  font-size: 12px;
+  color: var(--ink-3);
+  gap: 5px;
+}
+
+/* ── Version chip refinement ─────────────────────────────── */
+.vchip {
+  padding: 3px 10px;
+  font-size: 11.5px;
+  border-radius: 6px;
+}
+
+/* ── Description text improvement ───────────────────────── */
+.card-desc {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Navbar pill refinement ──────────────────────────────── */
+.npill {
+  padding: 8px 18px;
+  font-size: 13px;
+}
+
+.npill.active {
+  font-weight: 600;
+}
+
+/* ── Pill count badge ────────────────────────────────────── */
+.pill-count {
+  font-size: 10.5px;
+  padding: 2px 7px;
+  min-width: 22px;
+}
+
+/* ── Better form card top line ───────────────────────────── */
+.form-card::before {
+  height: 3px;
+  background: linear-gradient(90deg, transparent 5%, var(--gold) 40%, var(--gold) 60%, transparent 95%);
+}
+
+/* ── Slightly more pronounced form-card shadow ───────────── */
+.form-card {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ── Improved CA toggle items ────────────────────────────── */
+.ca-toggle-item {
+  border-radius: var(--r-sm);
+  padding: 12px 18px;
+}
+
+/* ── Improved preventive measures ───────────────────────── */
+.ca-preventive {
+  border-radius: var(--r-sm);
+}
+
+/* ── Better form footer layout ───────────────────────────── */
+.fcard-footer {
+  background: var(--bg-3);
+  border-top: 1px solid var(--glass-b);
+}
+
+/* ── Textarea improvement ────────────────────────────────── */
+.ftarea { min-height: 80px; }
+.ftarea.short { min-height: 68px; }
+
+/* ── Better dropzone ─────────────────────────────────────── */
+.dropzone {
+  border-radius: var(--r-sm);
+  min-height: 120px;
+}
+
+/* ── Report modal document header improvement ────────────── */
+.rm-header {
+  padding: 44px 52px 40px;
+}
+
+.rm-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  margin-bottom: 14px;
+}
+
+.rm-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: -0.3px;
+}
+
+/* ── Report section title refinement ────────────────────── */
+.rm-section-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 22px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-b);
+}
+
+/* ── Report section number ───────────────────────────────── */
+.rm-section-num {
+  font-size: 11px;
+  color: var(--gold);
+  opacity: 0.7;
+  font-weight: 700;
+}
+
+/* ── Better report sections spacing ─────────────────────── */
+.rm-section {
+  padding: 32px 52px;
+}
+
+/* ── Improved rm-value typography ───────────────────────── */
+.rm-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ── Light theme refinements ─────────────────────────────── */
+body.light .form-card {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.07);
+}
+
+body.light .rca-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(201,168,76,0.12);
+}
+
+/* ── Editing button color (blue) ─────────────────────────── */
+.btn-create.editing {
+  background: linear-gradient(135deg, #4f8ef7, #2563eb);
+  box-shadow: 0 4px 20px rgba(79,142,247,0.35), 0 1px 3px rgba(0,0,0,0.2);
+}
+.btn-create.editing:hover {
+  box-shadow: 0 8px 32px rgba(79,142,247,0.45), 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .fcard-section { padding: 26px 24px; }
+  .fcard-divider { margin: 0 24px; }
+  .fcard-footer  { padding: 20px 24px; }
+  .rm-section { padding: 24px 28px; }
+  .rm-header  { padding: 32px 28px 28px; }
+}

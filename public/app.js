@@ -37,9 +37,9 @@ const rcaCache = {};
 const ssDataStore = {};
 
 // ── File state ────────────────────────────────────────────
-const emailImages   = [];  // { file, dataUrl }
-const screenshots   = [];  // { file, dataUrl }
-const closureImages = [];  // { file, dataUrl }
+const emailImages   = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
+const screenshots   = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
+const closureImages = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
 
 
 // ── Email image helpers ───────────────────────────────────
@@ -77,10 +77,11 @@ function renderEmailImages() {
   }
 
   emailImages.forEach((s, i) => {
+    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
-      <img src="${s.dataUrl}" alt="email ${i+1}">
+      <img src="${imgSrc}" alt="email ${i+1}">
       <button class="ss-thumb-remove" onclick="removeEmailImage(${i})" title="Remove">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -95,7 +96,7 @@ function renderEmailImages() {
     addBtn.className = 'ss-add-more';
     addBtn.title = 'Add more';
     addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-    addBtn.onclick = () => document.getElementById('file-email').click();
+    addBtn.onclick = (e) => { e.stopPropagation(); document.getElementById('file-email').click(); };
     grid.appendChild(addBtn);
   }
 }
@@ -141,10 +142,11 @@ function renderScreenshots() {
   }
 
   screenshots.forEach((s, i) => {
+    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
-      <img src="${s.dataUrl}" alt="screenshot ${i+1}">
+      <img src="${imgSrc}" alt="screenshot ${i+1}">
       <button class="ss-thumb-remove" onclick="removeScreenshot(${i})" title="Remove">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -159,7 +161,7 @@ function renderScreenshots() {
     addBtn.className = 'ss-add-more';
     addBtn.title = 'Add more';
     addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-    addBtn.onclick = () => document.getElementById('file-screenshots').click();
+    addBtn.onclick = (e) => { e.stopPropagation(); document.getElementById('file-screenshots').click(); };
     grid.appendChild(addBtn);
   }
 }
@@ -204,10 +206,11 @@ function renderClosureImages() {
   }
 
   closureImages.forEach((s, i) => {
+    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
-      <img src="${s.dataUrl}" alt="closure ${i+1}">
+      <img src="${imgSrc}" alt="closure ${i+1}">
       <button class="ss-thumb-remove" onclick="removeClosureImage(${i})" title="Remove">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -222,7 +225,7 @@ function renderClosureImages() {
     addBtn.className = 'ss-add-more';
     addBtn.title = 'Add more';
     addBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-    addBtn.onclick = () => document.getElementById('file-closure').click();
+    addBtn.onclick = (e) => { e.stopPropagation(); document.getElementById('file-closure').click(); };
     grid.appendChild(addBtn);
   }
 }
@@ -321,10 +324,18 @@ window.createRCA = async function () {
     };
     formData.append('data', JSON.stringify(fields));
 
-    // Attachments
-    emailImages.forEach((s, i) => formData.append(`emailImage_${i}`, s.file));
-    closureImages.forEach((s, i) => formData.append(`closureImage_${i}`, s.file));
-    screenshots.forEach((s, i) => formData.append(`screenshot_${i}`, s.file));
+    // Attachments — only upload NEW files; send existing filenames via JSON so server preserves them
+    const newEmailImages   = emailImages.filter(s => !s.isExisting);
+    const newClosureImages = closureImages.filter(s => !s.isExisting);
+    const newScreenshots   = screenshots.filter(s => !s.isExisting);
+    newEmailImages.forEach((s, i) => formData.append(`emailImage_${i}`, s.file));
+    newClosureImages.forEach((s, i) => formData.append(`closureImage_${i}`, s.file));
+    newScreenshots.forEach((s, i) => formData.append(`screenshot_${i}`, s.file));
+
+    // Existing filenames to keep (only during edits; [] means "no existing to preserve")
+    fields.existingEmailImages   = emailImages.filter(s => s.isExisting).map(s => s.filename);
+    fields.existingClosureImages = closureImages.filter(s => s.isExisting).map(s => s.filename);
+    fields.existingScreenshots   = screenshots.filter(s => s.isExisting).map(s => s.filename);
 
     const res = await fetch(isEditing ? `${API}/${editId}` : API, {
       method: isEditing ? 'PUT' : 'POST',
@@ -333,8 +344,12 @@ window.createRCA = async function () {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    // Snapshot dataUrls before clearing — we'll attach them to the cache entry after reload
-    const pendingDataUrls = screenshots.map((s, i) => ({ name: s.file.name, dataUrl: s.dataUrl }));
+    // Snapshot dataUrls before clearing — existing items have no inline dataUrl (served from /uploads/)
+    const pendingDataUrls = screenshots.map(s =>
+      s.isExisting
+        ? { name: s.filename, dataUrl: null }
+        : { name: s.file.name, dataUrl: s.dataUrl }
+    );
 
     // Reset form
     ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
@@ -359,15 +374,23 @@ window.createRCA = async function () {
 
     // Attach the snapshot dataUrls to the freshly cached record
     if (pendingDataUrls.length) {
-      // Find the record whose screenshot filenames match what we just uploaded
-      const match = allData.find(r => {
-        const names = r.attachments?.screenshots || r.screenshots || [];
-        return pendingDataUrls.every((p, i) => names[i] && names[i].includes(p.name.replace(/\s+/g,'_').split('.')[0]));
-      }) || allData[allData.length - 1]; // fallback: most recent record
-      if (match?._id) {
-        ssDataStore[match._id] = pendingDataUrls;
-        // Merge into cache so viewReport and downloadWordDoc can access them
-        if (rcaCache[match._id]) rcaCache[match._id]._ssDataUrls = pendingDataUrls;
+      let targetId;
+      if (isEditing) {
+        // We already know the exact record — use editId directly
+        targetId = editId;
+      } else {
+        // New record: match by filename or fall back to most-recent
+        const match = allData.find(r => {
+          const names = r.attachments?.screenshots || r.screenshots || [];
+          return pendingDataUrls.every((p, i) =>
+            names[i] && names[i].includes(p.name.replace(/\s+/g, '_').split('.')[0])
+          );
+        }) || allData[allData.length - 1];
+        targetId = match?._id;
+      }
+      if (targetId) {
+        ssDataStore[targetId] = pendingDataUrls;
+        if (rcaCache[targetId]) rcaCache[targetId]._ssDataUrls = pendingDataUrls;
       }
     }
 
@@ -404,7 +427,9 @@ window.createRCA = async function () {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      const pendingDataUrlsFallback = screenshots.map(s => ({ name: s.file.name, dataUrl: s.dataUrl }));
+      const pendingDataUrlsFallback = screenshots.map(s =>
+        s.isExisting ? { name: s.filename, dataUrl: null } : { name: s.file.name, dataUrl: s.dataUrl }
+      );
       // Reset
       ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
        'clientVersion','serverVersion','agentVersion'].forEach(id => {
@@ -425,10 +450,16 @@ window.createRCA = async function () {
       await loadRCA();
 
       if (pendingDataUrlsFallback.length) {
-        const match = allData[allData.length - 1];
-        if (match?._id) {
-          ssDataStore[match._id] = pendingDataUrlsFallback;
-          if (rcaCache[match._id]) rcaCache[match._id]._ssDataUrls = pendingDataUrlsFallback;
+        let targetId;
+        if (isEditing) {
+          targetId = editId;
+        } else {
+          const match = allData[allData.length - 1];
+          targetId = match?._id;
+        }
+        if (targetId) {
+          ssDataStore[targetId] = pendingDataUrlsFallback;
+          if (rcaCache[targetId]) rcaCache[targetId]._ssDataUrls = pendingDataUrlsFallback;
         }
       }
 
@@ -480,10 +511,9 @@ function renderRCA(data) {
     const va = rca.versions?.agent  || rca.agentVersion  || null;
     const hasVer = vc || vs || va;
 
-    const emailName    = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
-    const closureName  = rca.attachments?.responseClosure || rca.responseClosure || null;
-    const ssNames      = rca.attachments?.screenshots     || rca.screenshots     || [];
-    const hasAttach    = emailName || closureName;
+    const emailNames   = rca.attachments?.receivedEmails   || (rca.attachments?.receivedEmail   ? [rca.attachments.receivedEmail]   : rca.receivedEmail   ? [rca.receivedEmail]   : []);
+    const closureNames = rca.attachments?.responseClosures || (rca.attachments?.responseClosure ? [rca.attachments.responseClosure] : rca.responseClosure ? [rca.responseClosure] : []);
+    const ssNames      = rca.attachments?.screenshots      || rca.screenshots     || [];
 
     const dateStr = rca.createdAt
       ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
@@ -541,15 +571,10 @@ function renderRCA(data) {
         <div class="card-rich">
           <div class="ql-snow"><div class="ql-editor card-rich-content">${rca.detailedDescription}</div></div>
         </div>` : ''}
-        ${hasAttach ? `
-        <div class="card-attachments">
-          ${emailName   ? `<div class="ca-chip email-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${escHtml(emailName)}</span></div>` : ''}
-          ${closureName ? `<div class="ca-chip closure-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>${escHtml(closureName)}</span></div>` : ''}
-        </div>` : ''}
-        ${ssNames.length ? `
+        ${(emailNames.length || closureNames.length || ssNames.length) ? `
         <div class="card-screenshots">
-          ${ssNames.slice(0,4).map(n => `<div class="cs-thumb"><img src="/uploads/${escHtml(n)}" alt="${escHtml(n)}" onerror="this.parentElement.style.display='none'"></div>`).join('')}
-          ${ssNames.length > 4 ? `<div class="cs-more">+${ssNames.length - 4}</div>` : ''}
+          ${[...emailNames, ...closureNames, ...ssNames].slice(0, 4).map(n => `<div class="cs-thumb"><img src="/uploads/${escHtml(n)}" alt="${escHtml(n)}" onerror="this.parentElement.style.display='none'"></div>`).join('')}
+          ${(emailNames.length + closureNames.length + ssNames.length) > 4 ? `<div class="cs-more">+${emailNames.length + closureNames.length + ssNames.length - 4}</div>` : ''}
         </div>` : ''}
       </div>
       <div class="card-footer">
@@ -583,6 +608,7 @@ function updateStats(data) {
   document.getElementById('stat-total').textContent    = data.length;
   document.getElementById('tab-count').textContent     = data.length;
 }
+
 
 // ── Edit ──────────────────────────────────────────────────
 window.editRCA = function (id) {
@@ -642,6 +668,31 @@ window.editRCA = function (id) {
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Update RCA Report`;
   btn.classList.add('editing');
 
+  // Clear existing attachment state so stale files don't carry over
+  emailImages.length = 0;
+  renderEmailImages();
+  closureImages.length = 0;
+  renderClosureImages();
+  screenshots.length = 0;
+  renderScreenshots();
+
+  // Pre-populate dropzones with existing attachments as server-side previews (no re-upload)
+  const editEmailNames   = rca.attachments?.receivedEmails   || (rca.attachments?.receivedEmail   ? [rca.attachments.receivedEmail]   : rca.receivedEmail   ? [rca.receivedEmail]   : []);
+  const editClosureNames = rca.attachments?.responseClosures || (rca.attachments?.responseClosure ? [rca.attachments.responseClosure] : rca.responseClosure ? [rca.responseClosure] : []);
+  const editSsNames      = rca.attachments?.screenshots      || rca.screenshots     || [];
+  if (editEmailNames.length) {
+    editEmailNames.forEach(name => emailImages.push({ filename: name, isExisting: true }));
+    renderEmailImages();
+  }
+  if (editClosureNames.length) {
+    editClosureNames.forEach(name => closureImages.push({ filename: name, isExisting: true }));
+    renderClosureImages();
+  }
+  if (editSsNames.length) {
+    editSsNames.forEach(name => screenshots.push({ filename: name, isExisting: true }));
+    renderScreenshots();
+  }
+
   // Scroll to top of form
   document.getElementById('view-create').scrollIntoView({ behavior: 'smooth' });
 };
@@ -693,9 +744,9 @@ window.viewReport = function (id) {
   const vc = rca.versions?.client || rca.clientVersion || null;
   const vs = rca.versions?.server || rca.serverVersion || null;
   const va = rca.versions?.agent  || rca.agentVersion  || null;
-  const emailName   = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
-  const closureName = rca.attachments?.responseClosure || rca.responseClosure || null;
-  const ssNames     = rca.attachments?.screenshots     || rca.screenshots     || [];
+  const emailNames   = rca.attachments?.receivedEmails   || (rca.attachments?.receivedEmail   ? [rca.attachments.receivedEmail]   : rca.receivedEmail   ? [rca.receivedEmail]   : []);
+  const closureNames = rca.attachments?.responseClosures || (rca.attachments?.responseClosure ? [rca.attachments.responseClosure] : rca.responseClosure ? [rca.responseClosure] : []);
+  const ssNames      = rca.attachments?.screenshots      || rca.screenshots     || [];
   const dateStr     = rca.createdAt
     ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
     : '—';
@@ -827,45 +878,34 @@ window.viewReport = function (id) {
         </div>
       </div>` : ''}
 
-      <!-- §7 Attachments -->
-      ${(emailName || closureName) ? `
+      <!-- §7 Received Email -->
+      ${emailNames.length ? `
       <div class="rm-section">
         <div class="rm-section-num">07</div>
         <div class="rm-section-body">
-          <h2 class="rm-section-title">Email Correspondence</h2>
-          <div class="rm-email-list">
-            ${emailName ? `
-            <div class="rm-email-card rm-email-received">
-              <div class="rm-email-card-header">
-                <div class="rm-email-icon-wrap received">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                </div>
-                <div class="rm-email-meta">
-                  <span class="rm-email-type">Received Email</span>
-                  <span class="rm-email-dir-badge received-badge">↓ Inbound</span>
-                </div>
-              </div>
-              <div class="rm-email-filename">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                ${escHtml(emailName)}
-              </div>
-            </div>` : ''}
-            ${closureName ? `
-            <div class="rm-email-card rm-email-responded">
-              <div class="rm-email-card-header">
-                <div class="rm-email-icon-wrap responded">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                </div>
-                <div class="rm-email-meta">
-                  <span class="rm-email-type">Response &amp; Closure</span>
-                  <span class="rm-email-dir-badge responded-badge">↑ Outbound</span>
-                </div>
-              </div>
-              <div class="rm-email-filename">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                ${escHtml(closureName)}
-              </div>
-            </div>` : ''}
+          <h2 class="rm-section-title">Received Email</h2>
+          <div class="rm-screenshots">
+            ${emailNames.map((name, i) => `
+            <div class="rm-ss-item">
+              <img src="/uploads/${escHtml(name)}" alt="Received Email ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Received Email ${i+1} — ${escHtml(name)}')">
+              <span class="rm-ss-caption">Email ${i+1} — ${escHtml(name)}</span>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- §8 Response with Closure -->
+      ${closureNames.length ? `
+      <div class="rm-section">
+        <div class="rm-section-num">08</div>
+        <div class="rm-section-body">
+          <h2 class="rm-section-title">Response with Closure</h2>
+          <div class="rm-screenshots">
+            ${closureNames.map((name, i) => `
+            <div class="rm-ss-item">
+              <img src="/uploads/${escHtml(name)}" alt="Closure ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Closure ${i+1} — ${escHtml(name)}')">
+              <span class="rm-ss-caption">Closure ${i+1} — ${escHtml(name)}</span>
+            </div>`).join('')}
           </div>
         </div>
       </div>` : ''}
@@ -909,9 +949,9 @@ window.downloadWordDoc = async function () {
   const vc = rca.versions?.client || rca.clientVersion || null;
   const vs = rca.versions?.server || rca.serverVersion || null;
   const va = rca.versions?.agent  || rca.agentVersion  || null;
-  const emailName   = rca.attachments?.receivedEmail   || rca.receivedEmail   || null;
-  const closureName = rca.attachments?.responseClosure || rca.responseClosure || null;
-  const ssNames     = rca.attachments?.screenshots     || rca.screenshots     || [];
+  const emailNames   = rca.attachments?.receivedEmails   || (rca.attachments?.receivedEmail   ? [rca.attachments.receivedEmail]   : rca.receivedEmail   ? [rca.receivedEmail]   : []);
+  const closureNames = rca.attachments?.responseClosures || (rca.attachments?.responseClosure ? [rca.attachments.responseClosure] : rca.responseClosure ? [rca.responseClosure] : []);
+  const ssNames      = rca.attachments?.screenshots      || rca.screenshots     || [];
   const dateStr     = rca.createdAt
     ? new Date(rca.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
     : '—';
@@ -1137,11 +1177,63 @@ window.downloadWordDoc = async function () {
     children.push(makeDivider());
   }
 
-  // ── §7 Attachments ──
-  if (emailName || closureName) {
-    children.push(makeLabel('07 — ATTACHMENTS'));
-    if (emailName)   children.push(makeField('Received Email',   emailName));
-    if (closureName) children.push(makeField('Response Closure', closureName));
+  // ── §7 Received Email ──
+  const emailImageChildren = [];
+  for (let idx = 0; idx < emailNames.length; idx++) {
+    const name = emailNames[idx];
+    try {
+      const imgRes = await fetch(`/uploads/${name}`);
+      if (!imgRes.ok) throw new Error('not found');
+      const blob    = await imgRes.blob();
+      const buffer  = await blob.arrayBuffer();
+      const ext     = name.split('.').pop().toLowerCase();
+      const extMap  = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
+      const imgType = extMap[ext] || 'jpeg';
+      emailImageChildren.push(new Paragraph({
+        children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
+        spacing: { after: 80 },
+      }));
+      emailImageChildren.push(new Paragraph({
+        children: [new TextRun({ text: name, size: 18, color: '9CA3AF', italics: true })],
+        spacing: { after: 200 },
+      }));
+    } catch (_) {
+      emailImageChildren.push(makeParagraph(`[Image unavailable: ${name}]`));
+    }
+  }
+  if (emailImageChildren.length) {
+    children.push(makeLabel('07 — RECEIVED EMAIL'));
+    children.push(...emailImageChildren);
+    children.push(makeDivider());
+  }
+
+  // ── §8 Response with Closure ──
+  const closureImageChildren = [];
+  for (let idx = 0; idx < closureNames.length; idx++) {
+    const name = closureNames[idx];
+    try {
+      const imgRes = await fetch(`/uploads/${name}`);
+      if (!imgRes.ok) throw new Error('not found');
+      const blob    = await imgRes.blob();
+      const buffer  = await blob.arrayBuffer();
+      const ext     = name.split('.').pop().toLowerCase();
+      const extMap  = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
+      const imgType = extMap[ext] || 'jpeg';
+      closureImageChildren.push(new Paragraph({
+        children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
+        spacing: { after: 80 },
+      }));
+      closureImageChildren.push(new Paragraph({
+        children: [new TextRun({ text: name, size: 18, color: '9CA3AF', italics: true })],
+        spacing: { after: 200 },
+      }));
+    } catch (_) {
+      closureImageChildren.push(makeParagraph(`[Image unavailable: ${name}]`));
+    }
+  }
+  if (closureImageChildren.length) {
+    children.push(makeLabel('08 — RESPONSE WITH CLOSURE'));
+    children.push(...closureImageChildren);
     children.push(makeDivider());
   }
 
