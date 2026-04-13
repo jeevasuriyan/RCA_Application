@@ -9,3 +9,5 @@
 ## [1.0.0-Pre03] - 13-Apr-2026
 ### Added
 - [Jeeva] Fixed Multi image upload and view and UI Update
+
+- [Jeeva] Fixed Image replace during edit and edit tab close.

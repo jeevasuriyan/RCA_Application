@@ -249,7 +249,20 @@ window.switchView = function (view, fromEdit = false) {
     const btn = document.getElementById('submitBtn');
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create RCA Report`;
     btn.classList.remove('editing');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
   }
+};
+
+// ── Cancel Edit ───────────────────────────────────────────
+window.cancelEdit = function () {
+  window._editingId = null;
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create RCA Report`;
+  btn.classList.remove('editing');
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+  switchView('reports');
 };
 
 // ── Filter state ──────────────────────────────────────────
@@ -322,6 +335,11 @@ window.createRCA = async function () {
       pmProcess:           document.getElementById('pm-process').value.trim(),
       pmMonitoring:        document.getElementById('pm-monitoring').value.trim(),
     };
+    // Existing filenames to keep (only during edits; [] means "no existing to preserve")
+    fields.existingEmailImages   = emailImages.filter(s => s.isExisting).map(s => s.filename);
+    fields.existingClosureImages = closureImages.filter(s => s.isExisting).map(s => s.filename);
+    fields.existingScreenshots   = screenshots.filter(s => s.isExisting).map(s => s.filename);
+
     formData.append('data', JSON.stringify(fields));
 
     // Attachments — only upload NEW files; send existing filenames via JSON so server preserves them
@@ -331,11 +349,6 @@ window.createRCA = async function () {
     newEmailImages.forEach((s, i) => formData.append(`emailImage_${i}`, s.file));
     newClosureImages.forEach((s, i) => formData.append(`closureImage_${i}`, s.file));
     newScreenshots.forEach((s, i) => formData.append(`screenshot_${i}`, s.file));
-
-    // Existing filenames to keep (only during edits; [] means "no existing to preserve")
-    fields.existingEmailImages   = emailImages.filter(s => s.isExisting).map(s => s.filename);
-    fields.existingClosureImages = closureImages.filter(s => s.isExisting).map(s => s.filename);
-    fields.existingScreenshots   = screenshots.filter(s => s.isExisting).map(s => s.filename);
 
     const res = await fetch(isEditing ? `${API}/${editId}` : API, {
       method: isEditing ? 'PUT' : 'POST',
@@ -667,6 +680,10 @@ window.editRCA = function (id) {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Update RCA Report`;
   btn.classList.add('editing');
+
+  // Show cancel button
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if (cancelBtn) cancelBtn.style.display = 'inline-flex';
 
   // Clear existing attachment state so stale files don't carry over
   emailImages.length = 0;

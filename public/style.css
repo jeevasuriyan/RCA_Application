@@ -1378,7 +1378,8 @@ option { background: var(--bg-3); color: var(--ink); }
   .navbar-inner { gap: 12px; }
   .brand-wordmark { display: none; }
   .fcard-footer { flex-direction: column; align-items: stretch; gap: 12px; }
-  .btn-create { justify-content: center; }
+  .fcard-footer-actions { flex-direction: column; }
+  .btn-create, .btn-cancel-edit { justify-content: center; width: 100%; }
   .reports-header { flex-direction: column; align-items: flex-start; }
   .searchbar { width: 100%; }
 }
@@ -2198,6 +2199,36 @@ body.light .form-card {
 body.light .rca-card:hover {
   box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(201,168,76,0.12);
 }
+
+/* ── Cancel edit button ──────────────────────────────────── */
+.fcard-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-cancel-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  background: transparent;
+  border: 1px solid var(--glass-b);
+  border-radius: var(--r-sm);
+  color: var(--ink-3);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t);
+  letter-spacing: -0.1px;
+}
+.btn-cancel-edit:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.18);
+  color: var(--ink-1);
+}
+.btn-cancel-edit:active { transform: translateY(1px); }
 
 /* ── Editing button color (blue) ─────────────────────────── */
 .btn-create.editing {
