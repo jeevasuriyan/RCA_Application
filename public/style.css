@@ -2247,3 +2247,258 @@ body.light .rca-card:hover {
   .rm-section { padding: 24px 28px; }
   .rm-header  { padding: 32px 28px 28px; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   PROFESSIONAL WORD DOCUMENT STYLE
+   (Applied to the report modal viewer)
+══════════════════════════════════════════════════════════ */
+
+/* PDF download button */
+.btn-pdf-dl {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border: 1px solid rgba(220,38,38,.4);
+  border-radius: var(--r-xs);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t);
+  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+}
+.btn-pdf-dl:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+  box-shadow: 0 4px 16px rgba(220,38,38,0.45);
+  transform: translateY(-1px);
+}
+
+/* Modal body — document-viewer grey background */
+.report-modal-body {
+  background: #d4d9e4;
+}
+
+/* Document wrapper — always white paper */
+.rm-doc {
+  background: #ffffff !important;
+  color: #1a1a1a;
+  font-family: 'Calibri', 'DM Sans', 'Segoe UI', Arial, sans-serif;
+  margin: 28px auto 28px;
+  max-width: 780px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* ── Document header — dark navy corporate banner ── */
+.rm-doc .rm-header {
+  background: linear-gradient(135deg, #1a2f50 0%, #1e4090 100%) !important;
+  padding: 44px 54px 38px !important;
+  border-bottom: none !important;
+}
+.rm-doc .rm-header::before {
+  background: linear-gradient(90deg, #C9A84C 0%, #e8c96a 50%, #C9A84C 100%) !important;
+  height: 5px !important;
+}
+.rm-doc .rm-header::after { display: none !important; }
+
+.rm-doc .rm-eyebrow {
+  color: rgba(255,255,255,0.58) !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+  font-size: 10px !important;
+  letter-spacing: 3px !important;
+}
+.rm-doc .rm-title {
+  color: #ffffff !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+  letter-spacing: -0.2px !important;
+  max-width: none !important;
+}
+.rm-doc .rm-meta-row { gap: 14px !important; }
+.rm-doc .rm-meta-item {
+  color: rgba(255,255,255,0.68) !important;
+  font-size: 12px !important;
+}
+.rm-doc .rm-meta-item svg { opacity: 0.6; }
+
+/* Badges in white-on-dark header */
+.rm-doc .rm-badge.critical { background: rgba(224,92,107,0.22) !important; color: #ff9aa5 !important; border-color: rgba(224,92,107,0.4) !important; }
+.rm-doc .rm-badge.high     { background: rgba(232,144,80,0.22) !important; color: #ffbc88 !important; border-color: rgba(232,144,80,0.4) !important; }
+.rm-doc .rm-badge.medium   { background: rgba(212,169,58,0.22) !important; color: #f0ce72 !important; border-color: rgba(212,169,58,0.4) !important; }
+.rm-doc .rm-badge.low      { background: rgba(61,191,160,0.22) !important; color: #5dd9c6 !important; border-color: rgba(61,191,160,0.4) !important; }
+
+/* ── Document sections — white body ── */
+.rm-doc .rm-section {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e8edf5 !important;
+  padding: 30px 54px !important;
+  gap: 14px !important;
+  align-items: flex-start !important;
+}
+.rm-doc .rm-section:last-child { border-bottom: none !important; }
+
+/* Section number — small navy circle */
+.rm-doc .rm-section-num {
+  background: #1a2f50 !important;
+  color: #ffffff !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 0 !important;
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+  opacity: 1 !important;
+}
+
+/* Section title — navy with bottom rule */
+.rm-doc .rm-section-title {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #1a2f50 !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 9px !important;
+  border-bottom: 2px solid #1a2f50 !important;
+}
+
+/* Field labels and values */
+.rm-doc .rm-label {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+  letter-spacing: 0.7px !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+}
+.rm-doc .rm-value {
+  font-size: 13.5px !important;
+  color: #111827 !important;
+  font-weight: 500 !important;
+}
+.rm-doc .rm-value.rm-mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  font-size: 12.5px !important;
+  color: #1a2f50 !important;
+}
+.rm-doc .rm-badge-inline.critical { background: rgba(224,92,107,0.12) !important; color: #b91c1c !important; border-color: rgba(224,92,107,0.3) !important; }
+.rm-doc .rm-badge-inline.high     { background: rgba(232,144,80,0.12) !important; color: #c05621 !important; border-color: rgba(232,144,80,0.3) !important; }
+.rm-doc .rm-badge-inline.medium   { background: rgba(212,169,58,0.12) !important; color: #92660a !important; border-color: rgba(212,169,58,0.3) !important; }
+.rm-doc .rm-badge-inline.low      { background: rgba(61,191,160,0.12) !important; color: #0e7862 !important; border-color: rgba(61,191,160,0.3) !important; }
+
+/* Description block — light with navy left border */
+.rm-doc .rm-desc-block {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 3px solid #1a2f50 !important;
+  border-radius: 2px !important;
+  color: #374151 !important;
+  font-size: 13.5px !important;
+}
+
+/* Rich text / Quill */
+.rm-doc .rm-rich-content {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 2px !important;
+}
+.rm-doc .rm-quill-body {
+  color: #374151 !important;
+  padding: 16px 20px !important;
+}
+.rm-doc .rm-quill-body p    { color: #374151 !important; }
+.rm-doc .rm-quill-body h1,
+.rm-doc .rm-quill-body h2,
+.rm-doc .rm-quill-body h3   { color: #1a2f50 !important; }
+
+/* Corrective action tags */
+.rm-doc .rm-ca-tag {
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1e40af !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 4px 12px !important;
+}
+
+/* Preventive measures */
+.rm-doc .rm-pm-item {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  padding: 12px 16px !important;
+}
+.rm-doc .rm-pm-label {
+  color: #1a2f50 !important;
+  font-family: 'Calibri', 'DM Sans', sans-serif !important;
+  font-size: 11px !important;
+}
+.rm-doc .rm-pm-val { color: #374151 !important; }
+
+/* Screenshot thumbnails — larger in Word doc view */
+.rm-doc .rm-screenshots { gap: 14px !important; }
+.rm-doc .rm-ss-item {
+  width: 200px !important;
+  height: 140px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f9fafb !important;
+  border-radius: 4px !important;
+}
+.rm-doc .rm-ss-item img { object-fit: contain !important; }
+
+/* ── Print / PDF styles ── */
+@media print {
+  /* Show only the report modal content */
+  body > * { display: none !important; }
+  #report-modal { display: block !important; }
+
+  #report-modal {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+    align-items: stretch !important;
+  }
+  .report-modal-panel {
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  .report-modal-toolbar { display: none !important; }
+  .report-modal-body {
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  .rm-doc {
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    page-break-inside: auto;
+  }
+  .rm-section { page-break-inside: avoid; }
+  .rm-doc .rm-ss-item {
+    width: 160px !important;
+    height: 110px !important;
+    page-break-inside: avoid;
+  }
+  .lightbox-overlay { display: none !important; }
+}

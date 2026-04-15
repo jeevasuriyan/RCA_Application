@@ -31,15 +31,22 @@ function getPriority(v = '') {
 // ── RCA record cache (keyed by _id for safe edit lookups) ─
 const rcaCache = {};
 
-// ── Screenshot dataUrl store (survives server round-trip) ─
-// Maps rca._id → array of { name, dataUrl } so the modal and
-// Word download can show images without hitting /uploads/.
-const ssDataStore = {};
-
 // ── File state ────────────────────────────────────────────
-const emailImages   = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
-const screenshots   = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
-const closureImages = [];  // { file, dataUrl } for new uploads  |  { filename, isExisting:true } for server files
+const emailImages   = [];  // { file, dataUrl } for new uploads  |  { name, data, isExisting:true } for DB images
+const screenshots   = [];  // { file, dataUrl } for new uploads  |  { name, data, isExisting:true } for DB images
+const closureImages = [];  // { file, dataUrl } for new uploads  |  { name, data, isExisting:true } for DB images
+
+// ── Image helpers (handle both new {name,data} objects and legacy filename strings) ──
+function getImgSrc(item) {
+  if (!item) return '';
+  if (typeof item === 'object' && item.data) return item.data;
+  // Legacy: item is a filename string
+  return `/uploads/${typeof item === 'object' ? item.name : item}`;
+}
+function getImgName(item) {
+  if (!item) return '';
+  return typeof item === 'object' ? (item.name || '') : item;
+}
 
 
 // ── Email image helpers ───────────────────────────────────
@@ -77,7 +84,7 @@ function renderEmailImages() {
   }
 
   emailImages.forEach((s, i) => {
-    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
+    const imgSrc = s.isExisting ? getImgSrc(s) : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
@@ -142,7 +149,7 @@ function renderScreenshots() {
   }
 
   screenshots.forEach((s, i) => {
-    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
+    const imgSrc = s.isExisting ? getImgSrc(s) : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
@@ -206,7 +213,7 @@ function renderClosureImages() {
   }
 
   closureImages.forEach((s, i) => {
-    const imgSrc = s.isExisting ? `/uploads/${s.filename}` : s.dataUrl;
+    const imgSrc = s.isExisting ? getImgSrc(s) : s.dataUrl;
     const thumb = document.createElement('div');
     thumb.className = 'ss-thumb';
     thumb.innerHTML = `
@@ -335,10 +342,10 @@ window.createRCA = async function () {
       pmProcess:           document.getElementById('pm-process').value.trim(),
       pmMonitoring:        document.getElementById('pm-monitoring').value.trim(),
     };
-    // Existing filenames to keep (only during edits; [] means "no existing to preserve")
-    fields.existingEmailImages   = emailImages.filter(s => s.isExisting).map(s => s.filename);
-    fields.existingClosureImages = closureImages.filter(s => s.isExisting).map(s => s.filename);
-    fields.existingScreenshots   = screenshots.filter(s => s.isExisting).map(s => s.filename);
+    // Existing image names to keep (only during edits; [] means "no existing to preserve")
+    fields.existingEmailImages   = emailImages.filter(s => s.isExisting).map(s => s.name || s.filename);
+    fields.existingClosureImages = closureImages.filter(s => s.isExisting).map(s => s.name || s.filename);
+    fields.existingScreenshots   = screenshots.filter(s => s.isExisting).map(s => s.name || s.filename);
 
     formData.append('data', JSON.stringify(fields));
 
@@ -356,13 +363,6 @@ window.createRCA = async function () {
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    // Snapshot dataUrls before clearing — existing items have no inline dataUrl (served from /uploads/)
-    const pendingDataUrls = screenshots.map(s =>
-      s.isExisting
-        ? { name: s.filename, dataUrl: null }
-        : { name: s.file.name, dataUrl: s.dataUrl }
-    );
 
     // Reset form
     ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
@@ -385,28 +385,7 @@ window.createRCA = async function () {
 
     await loadRCA();
 
-    // Attach the snapshot dataUrls to the freshly cached record
-    if (pendingDataUrls.length) {
-      let targetId;
-      if (isEditing) {
-        // We already know the exact record — use editId directly
-        targetId = editId;
-      } else {
-        // New record: match by filename or fall back to most-recent
-        const match = allData.find(r => {
-          const names = r.attachments?.screenshots || r.screenshots || [];
-          return pendingDataUrls.every((p, i) =>
-            names[i] && names[i].includes(p.name.replace(/\s+/g, '_').split('.')[0])
-          );
-        }) || allData[allData.length - 1];
-        targetId = match?._id;
-      }
-      if (targetId) {
-        ssDataStore[targetId] = pendingDataUrls;
-        if (rcaCache[targetId]) rcaCache[targetId]._ssDataUrls = pendingDataUrls;
-      }
-    }
-
+    // Images are stored as base64 in DB; loadRCA() brings them back — no local cache needed.
     switchView('reports');
 
   } catch (err) {
@@ -440,9 +419,6 @@ window.createRCA = async function () {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      const pendingDataUrlsFallback = screenshots.map(s =>
-        s.isExisting ? { name: s.filename, dataUrl: null } : { name: s.file.name, dataUrl: s.dataUrl }
-      );
       // Reset
       ['clientName','priority','raisedBy','product','affectedModule','affectedFeature','description',
        'clientVersion','serverVersion','agentVersion'].forEach(id => {
@@ -461,21 +437,6 @@ window.createRCA = async function () {
       btn.classList.remove('editing');
 
       await loadRCA();
-
-      if (pendingDataUrlsFallback.length) {
-        let targetId;
-        if (isEditing) {
-          targetId = editId;
-        } else {
-          const match = allData[allData.length - 1];
-          targetId = match?._id;
-        }
-        if (targetId) {
-          ssDataStore[targetId] = pendingDataUrlsFallback;
-          if (rcaCache[targetId]) rcaCache[targetId]._ssDataUrls = pendingDataUrlsFallback;
-        }
-      }
-
       switchView('reports');
     } catch (e2) {
       console.error('JSON fallback also failed:', e2);
@@ -538,11 +499,7 @@ function renderRCA(data) {
     card.style.setProperty('--priority-color', p.color);
 
     // Cache so editRCA can look up by ID instead of JSON-in-attribute
-    if (rca._id) {
-      rcaCache[rca._id] = rca;
-      // Restore any client-side dataUrls we have for this record
-      if (ssDataStore[rca._id]) rcaCache[rca._id]._ssDataUrls = ssDataStore[rca._id];
-    }
+    if (rca._id) rcaCache[rca._id] = rca;
 
     card.innerHTML = `
       <div class="card-stripe"></div>
@@ -586,7 +543,7 @@ function renderRCA(data) {
         </div>` : ''}
         ${(emailNames.length || closureNames.length || ssNames.length) ? `
         <div class="card-screenshots">
-          ${[...emailNames, ...closureNames, ...ssNames].slice(0, 4).map(n => `<div class="cs-thumb"><img src="/uploads/${escHtml(n)}" alt="${escHtml(n)}" onerror="this.parentElement.style.display='none'"></div>`).join('')}
+          ${[...emailNames, ...closureNames, ...ssNames].slice(0, 4).map(n => `<div class="cs-thumb"><img src="${getImgSrc(n)}" alt="${escHtml(getImgName(n))}" onerror="this.parentElement.style.display='none'"></div>`).join('')}
           ${(emailNames.length + closureNames.length + ssNames.length) > 4 ? `<div class="cs-more">+${emailNames.length + closureNames.length + ssNames.length - 4}</div>` : ''}
         </div>` : ''}
       </div>
@@ -693,20 +650,26 @@ window.editRCA = function (id) {
   screenshots.length = 0;
   renderScreenshots();
 
-  // Pre-populate dropzones with existing attachments as server-side previews (no re-upload)
+  // Pre-populate dropzones with existing attachments (base64 from DB — no re-upload needed)
   const editEmailNames   = rca.attachments?.receivedEmails   || (rca.attachments?.receivedEmail   ? [rca.attachments.receivedEmail]   : rca.receivedEmail   ? [rca.receivedEmail]   : []);
   const editClosureNames = rca.attachments?.responseClosures || (rca.attachments?.responseClosure ? [rca.attachments.responseClosure] : rca.responseClosure ? [rca.responseClosure] : []);
   const editSsNames      = rca.attachments?.screenshots      || rca.screenshots     || [];
+
+  function toExistingEntry(item) {
+    if (typeof item === 'object') return { name: item.name, data: item.data, isExisting: true };
+    return { name: item, filename: item, isExisting: true }; // legacy string fallback
+  }
+
   if (editEmailNames.length) {
-    editEmailNames.forEach(name => emailImages.push({ filename: name, isExisting: true }));
+    editEmailNames.forEach(item => emailImages.push(toExistingEntry(item)));
     renderEmailImages();
   }
   if (editClosureNames.length) {
-    editClosureNames.forEach(name => closureImages.push({ filename: name, isExisting: true }));
+    editClosureNames.forEach(item => closureImages.push(toExistingEntry(item)));
     renderClosureImages();
   }
   if (editSsNames.length) {
-    editSsNames.forEach(name => screenshots.push({ filename: name, isExisting: true }));
+    editSsNames.forEach(item => screenshots.push(toExistingEntry(item)));
     renderScreenshots();
   }
 
@@ -882,13 +845,13 @@ window.viewReport = function (id) {
         <div class="rm-section-body">
           <h2 class="rm-section-title">Reference Screenshots</h2>
           <div class="rm-screenshots">
-            ${ssNames.map((name, i) => {
-              const dataUrl = rca._ssDataUrls?.[i]?.dataUrl;
-              const src = dataUrl ? dataUrl : `/uploads/${escHtml(name)}`;
+            ${ssNames.map((item, i) => {
+              const src  = getImgSrc(item);
+              const name = escHtml(getImgName(item));
               return `
               <div class="rm-ss-item">
-                <img src="${src}" alt="Screenshot ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Screenshot ${i+1} — ${escHtml(name)}')">
-                <span class="rm-ss-caption">Screenshot ${i+1} — ${escHtml(name)}</span>
+                <img src="${src}" alt="Screenshot ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Screenshot ${i+1} — ${name}')">
+                <span class="rm-ss-caption">Screenshot ${i+1} — ${name}</span>
               </div>`;
             }).join('')}
           </div>
@@ -902,11 +865,15 @@ window.viewReport = function (id) {
         <div class="rm-section-body">
           <h2 class="rm-section-title">Received Email</h2>
           <div class="rm-screenshots">
-            ${emailNames.map((name, i) => `
+            ${emailNames.map((item, i) => {
+              const src  = getImgSrc(item);
+              const name = escHtml(getImgName(item));
+              return `
             <div class="rm-ss-item">
-              <img src="/uploads/${escHtml(name)}" alt="Received Email ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Received Email ${i+1} — ${escHtml(name)}')">
-              <span class="rm-ss-caption">Email ${i+1} — ${escHtml(name)}</span>
-            </div>`).join('')}
+              <img src="${src}" alt="Received Email ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Received Email ${i+1} — ${name}')">
+              <span class="rm-ss-caption">Email ${i+1} — ${name}</span>
+            </div>`;
+            }).join('')}
           </div>
         </div>
       </div>` : ''}
@@ -918,11 +885,15 @@ window.viewReport = function (id) {
         <div class="rm-section-body">
           <h2 class="rm-section-title">Response with Closure</h2>
           <div class="rm-screenshots">
-            ${closureNames.map((name, i) => `
+            ${closureNames.map((item, i) => {
+              const src  = getImgSrc(item);
+              const name = escHtml(getImgName(item));
+              return `
             <div class="rm-ss-item">
-              <img src="/uploads/${escHtml(name)}" alt="Closure ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Closure ${i+1} — ${escHtml(name)}')">
-              <span class="rm-ss-caption">Closure ${i+1} — ${escHtml(name)}</span>
-            </div>`).join('')}
+              <img src="${src}" alt="Closure ${i+1}" onerror="this.closest('.rm-ss-item').style.display='none'" onclick="openLightbox(this.src,'Closure ${i+1} — ${name}')">
+              <span class="rm-ss-caption">Closure ${i+1} — ${name}</span>
+            </div>`;
+            }).join('')}
           </div>
         </div>
       </div>` : ''}
@@ -1134,47 +1105,34 @@ window.downloadWordDoc = async function () {
     children.push(makeDivider());
   }
 
-  // ── §6 Screenshots (embed if accessible) ──
+  // ── §6 Screenshots ──
   const imageChildren = [];
-  // Build a name→dataUrl map for flexible lookup
-  const ssDataUrlMap = {};
-  if (rca._ssDataUrls && Array.isArray(rca._ssDataUrls)) {
-    rca._ssDataUrls.forEach((entry, idx) => {
-      if (entry?.dataUrl) {
-        ssDataUrlMap[idx] = entry.dataUrl;
-        if (entry.name) ssDataUrlMap[entry.name] = entry.dataUrl;
-      }
-    });
-  }
-
   for (let idx = 0; idx < ssNames.length; idx++) {
-    const name = ssNames[idx];
+    const item   = ssNames[idx];
+    const name   = getImgName(item);
+    const dataUrl = typeof item === 'object' ? item.data : null;
     try {
-      let buffer;
-      let imgType;
-
-      // Try index-based lookup first, then name-based, then fetch
-      const dataUrl = ssDataUrlMap[idx] || ssDataUrlMap[name];
+      let buffer, imgType;
       if (dataUrl) {
         const base64 = dataUrl.split(',')[1];
         if (!base64) throw new Error('invalid dataUrl');
-        const mime   = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
-        const typeMap = { 'image/jpeg':'jpeg', 'image/jpg':'jpeg', 'image/png':'png', 'image/gif':'gif', 'image/webp':'webp' };
+        const mime    = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        const typeMap = { 'image/jpeg':'jpeg','image/jpg':'jpeg','image/png':'png','image/gif':'gif','image/webp':'webp' };
         imgType = typeMap[mime] || 'jpeg';
         const binary = atob(base64);
         const bytes  = new Uint8Array(binary.length);
         for (let b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
         buffer = bytes.buffer;
       } else {
+        // Legacy: fetch from /uploads/
         const res = await fetch(`/uploads/${name}`);
         if (!res.ok) throw new Error('not found');
         const blob = await res.blob();
         buffer = await blob.arrayBuffer();
         const ext = name.split('.').pop().toLowerCase();
-        const extMap = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
+        const extMap = { jpg:'jpeg',jpeg:'jpeg',png:'png',gif:'gif',webp:'webp' };
         imgType = extMap[ext] || 'jpeg';
       }
-
       imageChildren.push(new Paragraph({
         children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
         spacing: { after: 80 },
@@ -1197,15 +1155,27 @@ window.downloadWordDoc = async function () {
   // ── §7 Received Email ──
   const emailImageChildren = [];
   for (let idx = 0; idx < emailNames.length; idx++) {
-    const name = emailNames[idx];
+    const item    = emailNames[idx];
+    const name    = getImgName(item);
+    const dataUrl = typeof item === 'object' ? item.data : null;
     try {
-      const imgRes = await fetch(`/uploads/${name}`);
-      if (!imgRes.ok) throw new Error('not found');
-      const blob    = await imgRes.blob();
-      const buffer  = await blob.arrayBuffer();
-      const ext     = name.split('.').pop().toLowerCase();
-      const extMap  = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
-      const imgType = extMap[ext] || 'jpeg';
+      let buffer, imgType;
+      if (dataUrl) {
+        const base64 = dataUrl.split(',')[1];
+        const mime    = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        const typeMap = { 'image/jpeg':'jpeg','image/jpg':'jpeg','image/png':'png','image/gif':'gif','image/webp':'webp' };
+        imgType = typeMap[mime] || 'jpeg';
+        const binary = atob(base64);
+        const bytes  = new Uint8Array(binary.length);
+        for (let b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
+        buffer = bytes.buffer;
+      } else {
+        const res = await fetch(`/uploads/${name}`);
+        if (!res.ok) throw new Error('not found');
+        buffer  = await (await res.blob()).arrayBuffer();
+        const ext = name.split('.').pop().toLowerCase();
+        imgType = ({ jpg:'jpeg',jpeg:'jpeg',png:'png',gif:'gif',webp:'webp' })[ext] || 'jpeg';
+      }
       emailImageChildren.push(new Paragraph({
         children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
         spacing: { after: 80 },
@@ -1227,15 +1197,27 @@ window.downloadWordDoc = async function () {
   // ── §8 Response with Closure ──
   const closureImageChildren = [];
   for (let idx = 0; idx < closureNames.length; idx++) {
-    const name = closureNames[idx];
+    const item    = closureNames[idx];
+    const name    = getImgName(item);
+    const dataUrl = typeof item === 'object' ? item.data : null;
     try {
-      const imgRes = await fetch(`/uploads/${name}`);
-      if (!imgRes.ok) throw new Error('not found');
-      const blob    = await imgRes.blob();
-      const buffer  = await blob.arrayBuffer();
-      const ext     = name.split('.').pop().toLowerCase();
-      const extMap  = { jpg:'jpeg', jpeg:'jpeg', png:'png', gif:'gif', webp:'webp' };
-      const imgType = extMap[ext] || 'jpeg';
+      let buffer, imgType;
+      if (dataUrl) {
+        const base64 = dataUrl.split(',')[1];
+        const mime    = dataUrl.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        const typeMap = { 'image/jpeg':'jpeg','image/jpg':'jpeg','image/png':'png','image/gif':'gif','image/webp':'webp' };
+        imgType = typeMap[mime] || 'jpeg';
+        const binary = atob(base64);
+        const bytes  = new Uint8Array(binary.length);
+        for (let b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
+        buffer = bytes.buffer;
+      } else {
+        const res = await fetch(`/uploads/${name}`);
+        if (!res.ok) throw new Error('not found');
+        buffer  = await (await res.blob()).arrayBuffer();
+        const ext = name.split('.').pop().toLowerCase();
+        imgType = ({ jpg:'jpeg',jpeg:'jpeg',png:'png',gif:'gif',webp:'webp' })[ext] || 'jpeg';
+      }
       closureImageChildren.push(new Paragraph({
         children: [new ImageRun({ data: buffer, transformation: { width: 480, height: 280 }, type: imgType })],
         spacing: { after: 80 },
@@ -1290,6 +1272,19 @@ window.downloadWordDoc = async function () {
   a.download = `RCA_${(rca.clientName || 'report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+// ── Download PDF ──────────────────────────────────────────
+window.downloadPDF = function () {
+  const modal = document.getElementById('report-modal');
+  const id    = modal.dataset.rcaId;
+  const rca   = rcaCache[id];
+  const orig  = document.title;
+  if (rca) {
+    document.title = `RCA_${(rca.clientName || 'report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}`;
+  }
+  window.print();
+  document.title = orig;
 };
 
 // ── Theme Toggle ──────────────────────────────────────────
