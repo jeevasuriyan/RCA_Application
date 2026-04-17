@@ -5,50 +5,401 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — RCA Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="/auth/auth.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* extra pill for role badge on card */
-    .role-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--gold-dim); border: 1px solid var(--gold-b);
-      color: var(--gold); border-radius: 20px; font-size: 11px;
-      font-weight: 600; padding: 3px 10px; letter-spacing: .4px;
-      text-transform: uppercase; margin-bottom: 6px;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; font-family: 'Inter', sans-serif;
+      font-size: 14px; -webkit-font-smoothing: antialiased; overflow: hidden;
+    }
+
+    /* ── Background ── */
+    body {
+      background: url('../images/login-bg.jpg') center / cover no-repeat fixed;
+      position: relative;
+    }
+    .page-overlay {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, rgba(4,6,14,0.80) 0%, rgba(5,8,16,0.62) 50%, rgba(5,8,16,0.80) 100%);
+      z-index: 0;
+    }
+    /* Grid overlay */
+    .page-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    }
+
+    /* Ambient orbs */
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(90px); z-index: 0;
+      pointer-events: none;
+      animation: orbDrift 24s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+      top: -180px; left: -140px; animation-duration: 26s;
+    }
+    .orb-2 {
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%);
+      bottom: -120px; right: -80px; animation-duration: 32s; animation-delay: -10s;
+    }
+    @keyframes orbDrift {
+      0%,100% { transform: translate(0,0) scale(1);        opacity: .7; }
+      33%      { transform: translate(20px,-30px) scale(1.05); opacity: .9; }
+      66%      { transform: translate(-15px,20px) scale(.95); opacity: .6; }
+    }
+
+    /* ── Page layout ── */
+    .login-page {
+      position: relative; z-index: 1;
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 72px;
+    }
+
+    /* ════════════════════════════════════
+       LEFT — Info Widgets
+    ════════════════════════════════════ */
+    .info-side {
+      flex: 1; display: flex; flex-direction: column; gap: 14px;
+      max-width: 290px; padding-bottom: 40px;
+    }
+
+    /* Floating cards */
+    .float-card {
+      background: rgba(7,10,20,0.82);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(99,102,241,0.12);
+      border-radius: 18px; padding: 18px 20px; color: #f0f4ff;
+      animation: fcIn 0.65s cubic-bezier(.34,1.56,.64,1) both;
+      position: relative; overflow: hidden;
+    }
+    .float-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+    }
+    .float-card:nth-child(1) { animation-delay: .10s; }
+    .float-card:nth-child(2) { animation-delay: .25s; }
+    .float-card:nth-child(3) { animation-delay: .40s; }
+    @keyframes fcIn {
+      from { opacity: 0; transform: translateX(-20px) scale(0.95); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .fc-head { display: flex; align-items: center; gap: 11px; margin-bottom: 10px; }
+    .fc-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      animation: pulseDot 2.2s ease-in-out infinite;
+    }
+    .fc-dot-crit  { background: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,0.20); }
+    .fc-dot-ok    { background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,0.20); }
+    @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.45} }
+    .fc-label  { font-size: 12.5px; font-weight: 600; color: #f0f4ff; }
+    .fc-meta   { font-size: 11px; color: #5c6b8c; margin-top: 2px; }
+    .fc-body   { font-size: 12px; color: #a0aecb; line-height: 1.6; }
+    .fc-accent { color: #818cf8; font-weight: 600; }
+
+    .fc-stats { display: flex; gap: 22px; }
+    .fc-stat { text-align: center; }
+    .fc-stat-num { font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
+    .fc-stat-lbl { font-size: 9.5px; color: #5c6b8c; text-transform: uppercase; letter-spacing: .7px; margin-top: 4px; }
+    .num-crit { color: #f87171; }
+    .num-high { color: #fb923c; }
+    .num-ok   { color: #34d399; }
+
+    .fc-row { display: flex; align-items: center; gap: 12px; }
+    .fc-icon-box {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .fc-icon-ok     { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.25); color: #34d399; }
+    .fc-icon-indigo { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #818cf8; }
+
+    /* Tagline */
+    .info-tagline {
+      margin-top: 6px;
+      animation: fcIn 0.65s cubic-bezier(.34,1.56,.64,1) .55s both;
+    }
+    .info-tagline h2 {
+      font-size: 28px; font-weight: 800; color: #f0f4ff;
+      line-height: 1.2; letter-spacing: -0.8px; margin-bottom: 9px;
+    }
+    .info-tagline h2 em { color: #818cf8; font-style: normal; }
+    .info-tagline p { font-size: 13px; color: rgba(240,244,255,0.45); line-height: 1.65; }
+
+    /* ════════════════════════════════════
+       RIGHT — Login Card
+    ════════════════════════════════════ */
+    .form-float {
+      width: 390px; flex-shrink: 0;
+      background: linear-gradient(150deg, rgba(11,16,32,0.95) 0%, rgba(7,10,22,0.98) 100%);
+      backdrop-filter: blur(36px); -webkit-backdrop-filter: blur(36px);
+      border: 1px solid rgba(99,102,241,0.13);
+      border-radius: 26px; padding: 42px 38px;
+      box-shadow:
+        0 40px 100px rgba(0,0,0,0.70),
+        0 0 0 1px rgba(99,102,241,0.07),
+        0 1px 0 rgba(255,255,255,0.05) inset;
+      position: relative; overflow: hidden;
+      animation: cardIn 0.55s cubic-bezier(.34,1.4,.64,1) .05s both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    /* Indigo top stripe */
+    .form-float::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #6366f1, #818cf8, #6366f1);
+      border-radius: 26px 26px 0 0;
+    }
+    /* Corner glow */
+    .form-float::after {
+      content: ''; position: absolute; top: -50px; left: -50px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Brand in card */
+    .sp-brand {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 22px;
+    }
+    .sp-logo-wrap {
+      width: 48px; height: 48px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .sp-brand-name { font-size: 16px; font-weight: 800; color: #f0f4ff; letter-spacing: -.4px; }
+    .sp-brand-sub  { font-size: 10.5px; color: #384060; margin-top: 1px; letter-spacing: .3px; }
+
+    /* Heading */
+    .sp-heading {
+      font-size: 26px; font-weight: 800; color: #f0f4ff;
+      letter-spacing: -.6px; line-height: 1.15; margin-bottom: 7px;
+    }
+    .sp-sub { font-size: 13px; color: #5c6b8c; line-height: 1.55; margin-bottom: 30px; }
+
+    /* Alert */
+    .auth-alert {
+      display: flex; align-items: flex-start; gap: 9px;
+      padding: 11px 13px; border-radius: 10px; font-size: 13px;
+      margin-bottom: 18px; line-height: 1.45;
+      animation: fadeSlide .25s ease both;
+    }
+    .auth-alert.hidden { display: none; }
+    .auth-alert.error   { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.28); color: #f87171; }
+    .auth-alert.success { background: rgba(52,211,153,0.10);  border: 1px solid rgba(52,211,153,0.30);  color: #34d399; }
+    .auth-alert.info    { background: rgba(99,102,241,0.10);  border: 1px solid rgba(99,102,241,0.28);  color: #818cf8; }
+    @keyframes fadeSlide { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Form fields */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: #5c6b8c; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 8px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #384060; pointer-events: none;
+      display: flex; align-items: center; transition: color .22s;
+    }
+    .form-input {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 11px; padding: 13px 14px 13px 42px;
+      color: #f0f4ff; font-size: 14px; font-family: inherit; outline: none;
+      transition: border-color .22s, background .22s, box-shadow .22s;
+      line-height: 1.4;
+    }
+    .form-input::placeholder { color: #384060; font-size: 13px; }
+    .form-input:hover:not(:focus) {
+      border-color: rgba(255,255,255,0.13); background: rgba(255,255,255,0.06);
+    }
+    .form-input:focus {
+      border-color: rgba(99,102,241,0.50);
+      background: rgba(99,102,241,0.04);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.10);
+    }
+    .input-wrap:focus-within .input-icon { color: #818cf8; }
+    .form-input.has-eye { padding-right: 42px; }
+
+    .eye-btn {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #384060; cursor: pointer;
+      padding: 3px; display: flex; align-items: center; transition: color .22s;
+    }
+    .eye-btn:hover { color: #818cf8; }
+
+    .forgot-link {
+      display: block; text-align: right; font-size: 11.5px;
+      color: #5c6b8c; text-decoration: none; margin-top: 6px; transition: color .22s;
+    }
+    .forgot-link:hover { color: #818cf8; }
+
+    /* Submit button */
+    .btn-primary {
+      width: 100%; margin-top: 8px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff; border: none; border-radius: 11px;
+      padding: 14px; font-size: 14px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all .22s;
+      box-shadow: 0 4px 22px rgba(99,102,241,0.42);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: -.1px;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.58);
+      filter: brightness(1.06);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite; display: none;
+    }
+    .is-loading .btn-spinner { display: block; }
+    .is-loading .btn-label   { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Divider */
+    .sp-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 18px; }
+    .sp-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+    .sp-divider-text { font-size: 11px; color: #384060; text-transform: uppercase; letter-spacing: .6px; }
+
+    /* Footer */
+    .sp-footer { text-align: center; font-size: 13px; color: #5c6b8c; margin-top: 22px; }
+    .sp-link { color: #818cf8; font-weight: 600; text-decoration: none; transition: color .22s; }
+    .sp-link:hover { color: #a5b4fc; }
+
+    /* Toast stack */
+    .toasts { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      display: flex; align-items: center; gap: 9px;
+      padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      animation: toastIn .3s cubic-bezier(.34,1.56,.64,1) both;
+      max-width: 320px; backdrop-filter: blur(12px);
+    }
+    .toast.success { background: rgba(52,211,153,.13);  border: 1px solid rgba(52,211,153,.30);  color: #34d399; }
+    .toast.error   { background: rgba(248,113,113,.13); border: 1px solid rgba(248,113,113,.30); color: #f87171; }
+    .toast.info    { background: rgba(99,102,241,.12);  border: 1px solid rgba(99,102,241,.28);  color: #818cf8; }
+    @keyframes toastIn { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .info-side { display: none; }
+      .login-page { justify-content: center; padding: 24px; }
+      html, body { overflow: auto; height: auto; }
+    }
+    @media (max-width: 460px) {
+      .form-float { width: 100%; padding: 34px 24px; border-radius: 20px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Ambient Background (theme applied by JS) -->
-  <div class="bg-orbs" aria-hidden="true">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-orb bg-orb-3"></div>
-    <div class="bg-orb bg-orb-4"></div>
-  </div>
+  <div class="page-overlay"></div>
+  <div class="page-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-  <div class="auth-page">
-    <div class="auth-card">
-      <!-- Theme badge -->
-      <span class="theme-badge" id="theme-badge"></span>
+  <div class="login-page">
 
-      <!-- Brand -->
-      <div class="auth-brand">
-        <div class="auth-logo-wrap">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+    <!-- ══ LEFT: Info Widgets ══ -->
+    <div class="info-side">
+
+      <!-- Card 1 -->
+      <div class="float-card">
+        <div class="fc-head">
+          <div class="fc-dot fc-dot-crit"></div>
+          <div>
+            <div class="fc-label">Critical Incident Raised</div>
+            <div class="fc-meta">Payment Gateway · 2 min ago</div>
+          </div>
         </div>
-        <div class="auth-brand-name">RCA Manager</div>
-        <div class="auth-brand-sub">Root Cause Analysis Platform</div>
+        <div class="fc-body">
+          Root cause identified —
+          <span class="fc-accent">DB timeout</span> under peak load.
+          Corrective action in progress.
+        </div>
       </div>
 
-      <!-- Alert (hidden by default) -->
+      <!-- Card 2 -->
+      <div class="float-card">
+        <div style="font-size:10px;font-weight:700;color:#5c6b8c;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;">
+          Active Incidents
+        </div>
+        <div class="fc-stats">
+          <div class="fc-stat"><div class="fc-stat-num num-crit">3</div><div class="fc-stat-lbl">Critical</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-high">7</div><div class="fc-stat-lbl">High</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-ok">14</div><div class="fc-stat-lbl">Resolved</div></div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="float-card">
+        <div class="fc-row">
+          <div class="fc-icon-box fc-icon-ok">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="fc-label">RCA Report Closed</div>
+            <div class="fc-meta">Auth Module · Just now</div>
+          </div>
+        </div>
+        <div style="margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.06);">
+          <div class="fc-row" style="gap:8px;">
+            <div class="fc-icon-box fc-icon-indigo" style="width:26px;height:26px;border-radius:7px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <span style="font-size:11.5px;color:#a0aecb;">Resolved in <span class="fc-accent">4h 22m</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tagline -->
+      <div class="info-tagline">
+        <h2>Analyze. Resolve.<br><em>Prevent.</em></h2>
+        <p>Document incidents, identify root causes, and build a more resilient system — together.</p>
+      </div>
+
+    </div>
+
+    <!-- ══ RIGHT: Login Card ══ -->
+    <div class="form-float">
+
+      <!-- Brand -->
+      <div class="sp-brand">
+        <div class="sp-logo-wrap">
+          <img src="../images/rca-logo.svg" alt="RCA Manager Logo" style="width:48px;height:48px;object-fit:contain;">
+        </div>
+        <div>
+          <div class="sp-brand-name">Manager</div>
+          <div class="sp-brand-sub">Root Cause Analysis Platform</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
       <div id="alert" class="auth-alert hidden"></div>
 
       <!-- Heading -->
-      <h2 class="auth-heading">Welcome back</h2>
-      <p class="auth-sub">Sign in to your account to continue</p>
+      <h1 class="sp-heading">Welcome back</h1>
+      <p class="sp-sub">Sign in to continue managing incidents.</p>
 
       <!-- Form -->
       <form id="login-form" novalidate autocomplete="on">
@@ -78,9 +429,10 @@
             </span>
             <input class="form-input has-eye" type="password" id="password"
               placeholder="Enter your password" autocomplete="current-password" required>
-            <button type="button" class="eye-btn" aria-label="Toggle password">
+            <button type="button" class="eye-btn" id="eye-toggle" aria-label="Toggle password">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
               </svg>
             </button>
           </div>
@@ -94,61 +446,46 @@
 
       </form>
 
-      <div class="auth-footer" style="margin-top:20px;">
-        Don't have an account?&nbsp;
-        <a href="/auth/signup.html" class="auth-link">Create one</a>
+      <div class="sp-divider">
+        <div class="sp-divider-line"></div>
+        <span class="sp-divider-text">or</span>
+        <div class="sp-divider-line"></div>
       </div>
-      <div class="auth-footer" style="margin-top:8px;">
-        Forgot your password?&nbsp;
-        <a href="/auth/forgot-password.html" class="auth-link">Reset it here</a>
+
+      <div class="sp-footer">
+        Don't have an account?&nbsp;
+        <a href="/auth/signup.html" class="sp-link">Create one</a>
       </div>
 
     </div>
+
   </div>
 
   <div class="toasts"></div>
 
   <script src="/auth/auth.js"></script>
   <script>
-    /* ── Dynamic Background Themes ── */
-    const THEMES = [
-      { name:'Midnight Gold',  orbs:['rgba(201,168,76,.13)','rgba(61,191,160,.08)','rgba(201,168,76,.07)','rgba(61,191,160,.05)'],  color:'#c9a84c', bar:'linear-gradient(90deg,#c9a84c,#b8903a,#dfc060)' },
-      { name:'Deep Ocean',     orbs:['rgba(32,178,230,.14)','rgba(61,191,160,.10)','rgba(0,149,255,.08)','rgba(32,178,230,.06)'],   color:'#20b2e6', bar:'linear-gradient(90deg,#20b2e6,#0095ff,#3dbfa0)' },
-      { name:'Cosmic Violet',  orbs:['rgba(139,92,246,.14)','rgba(192,132,252,.09)','rgba(236,72,153,.08)','rgba(99,102,241,.06)'], color:'#8b5cf6', bar:'linear-gradient(90deg,#8b5cf6,#6366f1,#ec4899)' },
-      { name:'Aurora',         orbs:['rgba(16,185,129,.13)','rgba(6,182,212,.09)','rgba(34,211,238,.07)','rgba(16,185,129,.05)'],   color:'#10b981', bar:'linear-gradient(90deg,#10b981,#06b6d4,#22d3ee)' },
-      { name:'Solar Flare',    orbs:['rgba(249,115,22,.13)','rgba(239,68,68,.10)','rgba(245,158,11,.08)','rgba(249,115,22,.05)'],   color:'#f97316', bar:'linear-gradient(90deg,#f97316,#ef4444,#f59e0b)' },
-      { name:'Stellar Blue',   orbs:['rgba(59,130,246,.14)','rgba(147,197,253,.08)','rgba(99,179,237,.07)','rgba(59,130,246,.05)'], color:'#3b82f6', bar:'linear-gradient(90deg,#3b82f6,#60a5fa,#93c5fd)' },
-      { name:'Rose Nebula',    orbs:['rgba(236,72,153,.13)','rgba(167,139,250,.09)','rgba(251,113,133,.08)','rgba(236,72,153,.05)'],color:'#ec4899', bar:'linear-gradient(90deg,#ec4899,#a78bfa,#fb7185)' },
-      { name:'Carbon Green',   orbs:['rgba(52,211,153,.12)','rgba(74,222,128,.08)','rgba(16,185,129,.07)','rgba(52,211,153,.05)'],  color:'#34d399', bar:'linear-gradient(90deg,#34d399,#4ade80,#10b981)' },
-    ];
-    (function applyTheme() {
-      const t = THEMES[Math.floor(Math.random() * THEMES.length)];
-      const root = document.documentElement;
-      root.style.setProperty('--orb-1', t.orbs[0]);
-      root.style.setProperty('--orb-2', t.orbs[1]);
-      root.style.setProperty('--orb-3', t.orbs[2]);
-      root.style.setProperty('--orb-4', t.orbs[3]);
-      root.style.setProperty('--theme-bar', t.bar);
-      root.style.setProperty('--theme-color', t.color);
-      document.getElementById('theme-badge').textContent = t.name;
-    })();
+    AUTH.requireGuest();
 
-    AUTH.requireGuest();   // redirect away if already logged in
-    AUTH.initEyeToggles();
+    document.getElementById('eye-toggle').addEventListener('click', function () {
+      const inp  = document.getElementById('password');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      this.innerHTML = show
+        ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+        : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    });
 
     document.getElementById('login-form').addEventListener('submit', async e => {
       e.preventDefault();
       AUTH.hideAlert('alert');
-
       const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const btn      = document.getElementById('submit-btn');
-
       if (!email || !password) {
         AUTH.showAlert('alert', 'Please enter your email and password.');
         return;
       }
-
       AUTH.setLoading(btn, true);
       try {
         const data = await AUTH.api('POST', '/auth/login', { email, password });

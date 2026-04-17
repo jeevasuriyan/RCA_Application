@@ -19,13 +19,13 @@ const quill = new Quill('#details-editor', {
 
 // ── Priority map ──────────────────────────────────────────
 const PRIORITY = {
-  critical: { label: 'Critical', color: '#e05c6b', cls: 'critical' },
-  high:     { label: 'High',     color: '#e89050', cls: 'high'     },
-  medium:   { label: 'Medium',   color: '#d4a93a', cls: 'medium'   },
-  low:      { label: 'Low',      color: '#3dbfa0', cls: 'low'      },
+  critical: { label: 'Critical', color: '#f87171', cls: 'critical' },
+  high:     { label: 'High',     color: '#fb923c', cls: 'high'     },
+  medium:   { label: 'Medium',   color: '#fbbf24', cls: 'medium'   },
+  low:      { label: 'Low',      color: '#34d399', cls: 'low'      },
 };
 function getPriority(v = '') {
-  return PRIORITY[v.toLowerCase()] || { label: v || 'Unknown', color: '#404860', cls: 'unknown' };
+  return PRIORITY[v.toLowerCase()] || { label: v || 'Unknown', color: '#384060', cls: 'unknown' };
 }
 
 // ── RCA record cache (keyed by _id for safe edit lookups) ─
@@ -747,25 +747,32 @@ window.viewReport = function (id) {
   const modal = document.getElementById('report-modal');
   const body  = document.getElementById('report-modal-body');
 
+  const refId = `RCA-${id.slice(-6).toUpperCase()}`;
+  const genDate = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+
+  // Update toolbar title
+  const titleEl = document.getElementById('rmt-doc-title');
+  if (titleEl) titleEl.textContent = rca.title || rca.description || 'RCA Report';
+
   body.innerHTML = `
     <div class="rm-doc">
       <!-- Header -->
       <div class="rm-header" style="--priority-color:${p.color}">
-        <div class="rm-header-bar"></div>
-        <div class="rm-header-content">
+        <div class="rm-header-logo-row">
           <div class="rm-eyebrow">Root Cause Analysis Report</div>
-          <h1 class="rm-title">${escHtml(rca.title || rca.description || 'Untitled Incident')}</h1>
-          <div class="rm-meta-row">
-            <span class="rm-badge ${p.cls}">${p.label}</span>
-            <span class="rm-meta-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              ${dateStr}
-            </span>
-            <span class="rm-meta-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              ${escHtml(rca.clientName || '—')}
-            </span>
-          </div>
+          <span class="rm-ref">${refId}</span>
+        </div>
+        <h1 class="rm-title">${escHtml(rca.title || rca.description || 'Untitled Incident')}</h1>
+        <div class="rm-meta-row">
+          <span class="rm-badge ${p.cls}">${p.label}</span>
+          <span class="rm-meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${dateStr}
+          </span>
+          <span class="rm-meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${escHtml(rca.clientName || '—')}
+          </span>
         </div>
       </div>
 
@@ -898,6 +905,17 @@ window.viewReport = function (id) {
         </div>
       </div>` : ''}
 
+      <!-- Document Footer -->
+      <div class="rm-doc-footer">
+        <div class="rm-doc-footer-left">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>Confidential &mdash; Internal Use Only &mdash; ${refId}</span>
+        </div>
+        <div class="rm-doc-footer-right">Generated ${genDate}</div>
+      </div>
+
     </div>
   `;
 
@@ -921,10 +939,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Download Word Document ────────────────────────────────
 window.downloadWordDoc = async function () {
-  const modal = document.getElementById('report-modal');
-  const id    = modal.dataset.rcaId;
-  const rca   = rcaCache[id];
+  const modal   = document.getElementById('report-modal');
+  const id      = modal.dataset.rcaId;
+  const rca     = rcaCache[id];
   if (!rca) return;
+
+  const wordBtn  = document.getElementById('btn-word-dl');
+  const origHTML = wordBtn ? wordBtn.innerHTML : '';
+  if (wordBtn) {
+    wordBtn.disabled = true;
+    wordBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.9s linear infinite"><circle cx="12" cy="12" r="10" stroke-dasharray="50" stroke-dashoffset="15"/></svg> Generating…`;
+  }
 
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
           Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, ShadingType } = window.docx;
@@ -1265,13 +1290,17 @@ window.downloadWordDoc = async function () {
     }],
   });
 
-  const blob = await Packer.toBlob(doc);
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `RCA_${(rca.clientName || 'report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`;
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const blob = await Packer.toBlob(doc);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `RCA_${(rca.clientName || 'report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    if (wordBtn) { wordBtn.disabled = false; wordBtn.innerHTML = origHTML; }
+  }
 };
 
 // ── Download PDF ──────────────────────────────────────────
@@ -1285,17 +1314,6 @@ window.downloadPDF = function () {
   }
   window.print();
   document.title = orig;
-};
-
-// ── Theme Toggle ──────────────────────────────────────────
-(function initTheme() {
-  const saved = localStorage.getItem('rca-theme');
-  if (saved === 'light') document.body.classList.add('light');
-})();
-
-window.toggleTheme = function () {
-  const isLight = document.body.classList.toggle('light');
-  localStorage.setItem('rca-theme', isLight ? 'light' : 'dark');
 };
 
 // ── Lightbox ──────────────────────────────────────────────

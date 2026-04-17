@@ -2,7 +2,25 @@
   "permissions": {
     "allow": [
       "Bash(grep -v \"^$\")",
-      "Bash(grep -E \"\\\\.\\(js|html\\)$\")"
+      "Bash(grep -E \"\\\\.\\(js|html\\)$\")",
+      "Bash(curl -L -o \"main-bg.jpg\" \"https://images.unsplash.com/photo-1518770660439-4636190af475?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"main-bg: HTTP %{http_code}, Size: %{size_download} bytes\\\\n\")",
+      "Bash(curl -L -o \"login-bg.jpg\" \"https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"login-bg: HTTP %{http_code}, Size: %{size_download} bytes\\\\n\")",
+      "Bash(curl -L -o \"main-bg-test1.jpg\" \"https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"bokeh-office: HTTP %{http_code}, %{size_download}b\\\\n\")",
+      "Bash(curl -L -o \"main-bg-test2.jpg\" \"https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"earth-night: HTTP %{http_code}, %{size_download}b\\\\n\")",
+      "Bash(curl -L -o \"login-bg-new.jpg\" \"https://images.unsplash.com/photo-1497366754035-f200968a7eda?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"office-interior: HTTP %{http_code}, %{size_download}b\\\\n\")",
+      "Bash(curl -L -o \"login-bg-new.jpg\" \"https://images.unsplash.com/photo-1497366412874-3415097a27e7?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"office2: HTTP %{http_code}, %{size_download}b\\\\n\")",
+      "Bash(curl -L -o \"login-bg-v2.jpg\" \"https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=1920&q=80&fit=crop\" --max-time 30 -s -w \"abstract: HTTP %{http_code}, %{size_download}b\\\\n\")",
+      "Bash(cp main-bg-test1.jpg main-bg.jpg)",
+      "Bash(cp login-bg-new.jpg login-bg.jpg)",
+      "Bash(rm -f main-bg-test1.jpg main-bg-test2.jpg login-bg-new.jpg login-bg-v2.jpg)",
+      "WebSearch",
+      "WebFetch(domain:stock.adobe.com)",
+      "WebFetch(domain:www.dreamstime.com)",
+      "WebFetch(domain:www.shutterstock.com)",
+      "WebFetch(domain:www.vecteezy.com)",
+      "WebFetch(domain:pixabay.com)",
+      "WebFetch(domain:iconscout.com)",
+      "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")"
     ]
   }
 }
