@@ -1,19 +1,22 @@
 import bcrypt from 'bcryptjs';
-import { UserModel } from '../models/user.model.js';
+import { UserModel } from './user.model.js';
 
 export async function seedDefaultUser() {
-  const email    = process.env.DEFAULT_USER_EMAIL    || 'admin@rcaapp.com';
+  const email = process.env.DEFAULT_USER_EMAIL || 'admin@rcaapp.com';
   const password = process.env.DEFAULT_USER_PASSWORD || 'Admin@12345';
-  const name     = process.env.DEFAULT_USER_NAME     || 'Admin';
+  const name = process.env.DEFAULT_USER_NAME || 'Admin';
 
   const existing = await UserModel.findByEmail(email);
   if (existing) {
+    if (!existing.isAdmin) {
+      await UserModel.update(existing._id.toString(), { isAdmin: true });
+    }
     console.log(`✅ Default user ready  →  ${email}`);
     return;
   }
 
   const hashed = await bcrypt.hash(password, 12);
-  await UserModel.create({ name, email, password: hashed });
+  await UserModel.create({ name, email, password: hashed, isAdmin: true });
 
   console.log('');
   console.log('┌──────────────────────────────────────────┐');

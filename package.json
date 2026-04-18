@@ -1,6 +1,6 @@
 {
   "name": "Rca-Server",
-  "version": "1.0.0-Pre05",
+  "version": "1.0.0-Pre06",
   "type": "module",
   "main": "server.js",
   "scripts": {

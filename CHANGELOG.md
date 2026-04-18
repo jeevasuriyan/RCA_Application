@@ -1,3 +1,7 @@
+## [1.0.0-Pre06] - 19-Apr-2026
+### Added
+- [Jeeva] Revamped UI and added users page and Admin Access
+
 ## [1.0.0-Pre05] - 17-Apr-2026
 ### Added
 - [Jeeva] Fixed dowcument download and UI

@@ -1,5 +1,5 @@
 {
-  "watch": ["server.js", "db.js", "routes/", "public/"],
+  "watch": ["server.js", "src/", "public/"],
   "ext": "js,json,html,css",
   "ignore": ["public/uploads/", "node_modules/"],
   "delay": 300

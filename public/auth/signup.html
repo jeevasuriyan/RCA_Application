@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Account — RCA Manager</title>
+  <title>Create Account - RCA Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="/auth/auth.css">
 </head>
-<body>
+<body class="signup-page">
 
-  <!-- Ambient Background (orbs injected by JS theme picker) -->
   <div class="bg-orbs" id="bg-orbs" aria-hidden="true">
     <div class="bg-orb bg-orb-1"></div>
     <div class="bg-orb bg-orb-2"></div>
@@ -18,250 +17,120 @@
   </div>
 
   <div class="auth-page">
-    <div class="auth-card" style="max-width:480px">
+    <div class="signup-stage">
+      <div class="auth-card" style="max-width:480px">
 
-      <!-- Theme badge -->
-      <span class="theme-badge" id="theme-badge"></span>
+        <span class="theme-badge" id="theme-badge"></span>
 
-      <!-- Brand -->
-      <div class="auth-brand">
-        <div class="auth-logo-wrap">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+        <div class="auth-brand">
+          <div class="auth-logo-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="auth-brand-name">RCA Manager</div>
+          <div class="auth-brand-sub">Root Cause Analysis Platform</div>
         </div>
-        <div class="auth-brand-name">RCA Manager</div>
-        <div class="auth-brand-sub">Root Cause Analysis Platform</div>
+
+        <div id="alert" class="auth-alert hidden"></div>
+
+        <h2 class="auth-heading">Create your account</h2>
+        <p class="auth-sub">Join the platform to start managing incidents</p>
+
+        <form id="signup-form" novalidate autocomplete="on">
+
+          <div class="form-group">
+            <label class="form-label" for="name">Full Name</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input class="form-input" type="text" id="name"
+                placeholder="Your full name" autocomplete="name" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+              <input class="form-input" type="email" id="email"
+                placeholder="you@company.com" autocomplete="email" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              </span>
+              <input class="form-input has-eye" type="password" id="password"
+                placeholder="Create a strong password" autocomplete="new-password" required>
+              <button type="button" class="eye-btn" aria-label="Toggle password">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="pwd-meter" id="pwd-meter">
+              <div class="pwd-bar"></div>
+              <div class="pwd-bar"></div>
+              <div class="pwd-bar"></div>
+              <div class="pwd-bar"></div>
+              <span class="pwd-label"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm">Confirm Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 11 12 14 22 4"/>
+                  <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+              </span>
+              <input class="form-input has-eye" type="password" id="confirm"
+                placeholder="Repeat your password" autocomplete="new-password" required>
+              <button type="button" class="eye-btn" aria-label="Toggle confirm password">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <span id="match-hint" style="font-size:11px;margin-top:5px;display:none"></span>
+          </div>
+
+          <button type="submit" class="btn-primary" id="submit-btn">
+            <div class="btn-spinner"></div>
+            <span class="btn-label">Create Account</span>
+          </button>
+
+        </form>
+
+        <div class="auth-footer" style="margin-top:20px;">
+          Already have an account?&nbsp;
+          <a href="/auth/login.html" class="auth-link">Sign In</a>
+        </div>
       </div>
-
-      <!-- Alert -->
-      <div id="alert" class="auth-alert hidden"></div>
-
-      <!-- Heading -->
-      <h2 class="auth-heading">Create your account</h2>
-      <p class="auth-sub">Join the platform to start managing incidents</p>
-
-      <!-- Form -->
-      <form id="signup-form" novalidate autocomplete="on">
-
-        <!-- Full Name -->
-        <div class="form-group">
-          <label class="form-label" for="name">Full Name</label>
-          <div class="input-wrap">
-            <span class="input-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </span>
-            <input class="form-input" type="text" id="name"
-              placeholder="Your full name" autocomplete="name" required>
-          </div>
-        </div>
-
-        <!-- Email -->
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <div class="input-wrap">
-            <span class="input-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
-            </span>
-            <input class="form-input" type="email" id="email"
-              placeholder="you@company.com" autocomplete="email" required>
-          </div>
-        </div>
-
-        <!-- Password -->
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-            </span>
-            <input class="form-input has-eye" type="password" id="password"
-              placeholder="Create a strong password" autocomplete="new-password" required>
-            <button type="button" class="eye-btn" aria-label="Toggle password">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          </div>
-          <div class="pwd-meter" id="pwd-meter">
-            <div class="pwd-bar"></div>
-            <div class="pwd-bar"></div>
-            <div class="pwd-bar"></div>
-            <div class="pwd-bar"></div>
-            <span class="pwd-label"></span>
-          </div>
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="form-group">
-          <label class="form-label" for="confirm">Confirm Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 11 12 14 22 4"/>
-                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-              </svg>
-            </span>
-            <input class="form-input has-eye" type="password" id="confirm"
-              placeholder="Repeat your password" autocomplete="new-password" required>
-            <button type="button" class="eye-btn" aria-label="Toggle confirm password">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          </div>
-          <span id="match-hint" style="font-size:11px;margin-top:5px;display:none"></span>
-        </div>
-
-        <button type="submit" class="btn-primary" id="submit-btn">
-          <div class="btn-spinner"></div>
-          <span class="btn-label">Create Account</span>
-        </button>
-
-      </form>
-
-      <div class="auth-footer" style="margin-top:20px;">
-        Already have an account?&nbsp;
-        <a href="/auth/login.html" class="auth-link">Sign In</a>
-      </div>
-
     </div>
   </div>
 
   <div class="toasts"></div>
 
   <script src="/auth/auth.js"></script>
-  <script>
-    /* ── Dynamic Background Themes ── */
-    const THEMES = [
-      {
-        name: 'Midnight Gold',
-        orbs: ['rgba(201,168,76,.13)', 'rgba(61,191,160,.08)', 'rgba(201,168,76,.07)', 'rgba(61,191,160,.05)'],
-        color: '#c9a84c',
-        bar: 'linear-gradient(90deg,#c9a84c,#b8903a,#dfc060)',
-      },
-      {
-        name: 'Deep Ocean',
-        orbs: ['rgba(32,178,230,.14)', 'rgba(61,191,160,.10)', 'rgba(0,149,255,.08)', 'rgba(32,178,230,.06)'],
-        color: '#20b2e6',
-        bar: 'linear-gradient(90deg,#20b2e6,#0095ff,#3dbfa0)',
-      },
-      {
-        name: 'Cosmic Violet',
-        orbs: ['rgba(139,92,246,.14)', 'rgba(192,132,252,.09)', 'rgba(236,72,153,.08)', 'rgba(99,102,241,.06)'],
-        color: '#8b5cf6',
-        bar: 'linear-gradient(90deg,#8b5cf6,#6366f1,#ec4899)',
-      },
-      {
-        name: 'Aurora',
-        orbs: ['rgba(16,185,129,.13)', 'rgba(6,182,212,.09)', 'rgba(34,211,238,.07)', 'rgba(16,185,129,.05)'],
-        color: '#10b981',
-        bar: 'linear-gradient(90deg,#10b981,#06b6d4,#22d3ee)',
-      },
-      {
-        name: 'Solar Flare',
-        orbs: ['rgba(249,115,22,.13)', 'rgba(239,68,68,.10)', 'rgba(245,158,11,.08)', 'rgba(249,115,22,.05)'],
-        color: '#f97316',
-        bar: 'linear-gradient(90deg,#f97316,#ef4444,#f59e0b)',
-      },
-      {
-        name: 'Stellar Blue',
-        orbs: ['rgba(59,130,246,.14)', 'rgba(147,197,253,.08)', 'rgba(99,179,237,.07)', 'rgba(59,130,246,.05)'],
-        color: '#3b82f6',
-        bar: 'linear-gradient(90deg,#3b82f6,#60a5fa,#93c5fd)',
-      },
-      {
-        name: 'Rose Nebula',
-        orbs: ['rgba(236,72,153,.13)', 'rgba(167,139,250,.09)', 'rgba(251,113,133,.08)', 'rgba(236,72,153,.05)'],
-        color: '#ec4899',
-        bar: 'linear-gradient(90deg,#ec4899,#a78bfa,#fb7185)',
-      },
-      {
-        name: 'Carbon Green',
-        orbs: ['rgba(52,211,153,.12)', 'rgba(74,222,128,.08)', 'rgba(16,185,129,.07)', 'rgba(52,211,153,.05)'],
-        color: '#34d399',
-        bar: 'linear-gradient(90deg,#34d399,#4ade80,#10b981)',
-      },
-    ];
-
-    (function applyTheme() {
-      const t = THEMES[Math.floor(Math.random() * THEMES.length)];
-      const root = document.documentElement;
-      root.style.setProperty('--orb-1', t.orbs[0]);
-      root.style.setProperty('--orb-2', t.orbs[1]);
-      root.style.setProperty('--orb-3', t.orbs[2]);
-      root.style.setProperty('--orb-4', t.orbs[3]);
-      root.style.setProperty('--theme-bar', t.bar);
-      root.style.setProperty('--theme-color', t.color);
-      document.getElementById('theme-badge').textContent = t.name;
-    })();
-
-    /* ── Auth guard & helpers ── */
-    AUTH.requireGuest();
-    AUTH.initEyeToggles();
-    AUTH.initStrength('password', 'pwd-meter');
-
-    /* ── Confirm password match hint ── */
-    const confirmEl = document.getElementById('confirm');
-    const matchHint = document.getElementById('match-hint');
-    confirmEl.addEventListener('input', () => {
-      const pw = document.getElementById('password').value;
-      if (!confirmEl.value) { matchHint.style.display = 'none'; return; }
-      const match = pw === confirmEl.value;
-      matchHint.style.display = 'block';
-      matchHint.style.color = match ? 'var(--success)' : 'var(--error)';
-      matchHint.textContent  = match ? '✓ Passwords match' : '✕ Passwords do not match';
-    });
-
-    /* ── Form submit ── */
-    document.getElementById('signup-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      AUTH.hideAlert('alert');
-
-      const name     = document.getElementById('name').value.trim();
-      const email    = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const confirm  = document.getElementById('confirm').value;
-      const btn      = document.getElementById('submit-btn');
-
-      if (!name || !email || !password || !confirm) {
-        AUTH.showAlert('alert', 'Please fill in all fields.');
-        return;
-      }
-      if (name.length < 2) {
-        AUTH.showAlert('alert', 'Name must be at least 2 characters.');
-        return;
-      }
-      if (password.length < 8) {
-        AUTH.showAlert('alert', 'Password must be at least 8 characters.');
-        return;
-      }
-      if (password !== confirm) {
-        AUTH.showAlert('alert', 'Passwords do not match.');
-        return;
-      }
-
-      AUTH.setLoading(btn, true);
-      try {
-        const data = await AUTH.api('POST', '/auth/signup', { name, email, password });
-        AUTH.setToken(data.token);
-        AUTH.setUser(data.user);
-        AUTH.toast(`Welcome, ${data.user.name}! Account created.`, 'success', 1800);
-        setTimeout(() => window.location.replace('/'), 1000);
-      } catch (err) {
-        AUTH.showAlert('alert', err.message);
-        AUTH.setLoading(btn, false);
-      }
-    });
-  </script>
+  <script src="/pages/auth/signup.js"></script>
 </body>
 </html>

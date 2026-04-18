@@ -20,7 +20,14 @@
       "WebFetch(domain:www.vecteezy.com)",
       "WebFetch(domain:pixabay.com)",
       "WebFetch(domain:iconscout.com)",
-      "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")"
+      "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")",
+      "Bash(node --input-type=module --eval \"import './server.js'\")",
+      "Bash(node -e \"import\\('./server.js'\\).then\\(\\(\\) => console.log\\('imports ok'\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
+      "Bash(node --check src/server.js src/config/db.js src/modules/auth/auth.routes.js src/modules/auth/auth.middleware.js src/modules/auth/user.model.js src/modules/auth/jwt.utils.js src/modules/auth/seed.js src/modules/rca/rca.routes.js)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :4300)",
+      "Bash(tasklist)",
+      "Bash(findstr /i \"node\")"
     ]
   }
 }

@@ -1,9 +1,5 @@
-import { verifyToken } from '../utils/jwt.utils.js';
+import { verifyToken } from './jwt.utils.js';
 
-/**
- * Verifies the Bearer JWT in the Authorization header.
- * Sets req.user = { id, email, name }
- */
 export function authenticate(req, res, next) {
   const header = req.headers.authorization || '';
   if (!header.startsWith('Bearer ')) {
