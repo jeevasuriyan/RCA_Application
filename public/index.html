@@ -113,7 +113,22 @@
           <div class="fg r3">
             <div class="field">
               <label class="fl">Client Name <sup class="req">*</sup></label>
-              <input id="clientName" class="fi" placeholder="e.g. Vision_Bank" autocomplete="off">
+              <div class="fsel-wrap">
+                <select id="clientName" class="fi fsel">
+                  <option value="">Select client…</option>
+                  <option value="Fiserv(IND)">Fiserv(IND)</option>
+                  <option value="Fiserv(AUS)">Fiserv(AUS)</option>
+                  <option value="VisionBank">VisionBank</option>
+                  <option value="NDB">NDB</option>
+                  <option value="AFS">AFS</option>
+                  <option value="Mashreq">Mashreq</option>
+                  <option value="DotSolved">DotSolved</option>
+                  <option value="General">General</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
             </div>
             <div class="field">
               <label class="fl">Priority <sup class="req">*</sup></label>
@@ -136,15 +151,50 @@
             </div>
             <div class="field">
               <label class="fl">Product</label>
-              <input id="product" class="fi" placeholder="e.g. TerrA">
+              <div class="fsel-wrap">
+                <select id="product" class="fi fsel">
+                  <option value="">Select product…</option>
+                  <option value="Terra">Terra</option>
+                  <option value="SERP">SERP</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
             </div>
             <div class="field">
               <label class="fl">Affected Module</label>
-              <input id="affectedModule" class="fi" placeholder="e.g. Users">
+              <div class="fsel-wrap">
+                <select id="affectedModule" class="fi fsel">
+                  <option value="">Select module…</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Model">Model</option>
+                  <option value="Design">Design</option>
+                  <option value="HUB">HUB</option>
+                  <option value="Relay">Relay</option>
+                  <option value="Login">Login</option>
+                  <option value="General">General</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
             </div>
             <div class="field">
               <label class="fl">Affected Feature</label>
-              <input id="affectedFeature" class="fi" placeholder="e.g. Relay">
+              <div class="fsel-wrap">
+                <select id="affectedFeature" class="fi fsel">
+                  <option value="">Select feature…</option>
+                  <option value="Deployment">Deployment</option>
+                  <option value="Relay">Relay</option>
+                  <option value="Case">Case</option>
+                  <option value="Scenario">Scenario</option>
+                  <option value="General">General</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -161,23 +211,44 @@
           <div class="fg r3">
             <div class="field">
               <label class="fl">Client Version</label>
-              <div class="vpfx-wrap">
-                <span class="vpfx">v</span>
-                <input id="clientVersion" class="fi vpfx-fi" placeholder="3.2.1">
+              <div class="fsel-wrap">
+                <select id="clientVersion" class="fi fsel">
+                  <option value="">Select version…</option>
+                  <option value="14.0.0">14.0.0</option>
+                  <option value="13.0.0">13.0.0</option>
+                  <option value="12.0.0">12.0.0</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </div>
             </div>
             <div class="field">
               <label class="fl">Server Version</label>
-              <div class="vpfx-wrap">
-                <span class="vpfx">v</span>
-                <input id="serverVersion" class="fi vpfx-fi" placeholder="5.0.4">
+              <div class="fsel-wrap">
+                <select id="serverVersion" class="fi fsel">
+                  <option value="">Select version…</option>
+                  <option value="14.0.0">14.0.0</option>
+                  <option value="13.0.0">13.0.0</option>
+                  <option value="12.0.0">12.0.0</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </div>
             </div>
             <div class="field">
               <label class="fl">Agent Version</label>
-              <div class="vpfx-wrap">
-                <span class="vpfx">v</span>
-                <input id="agentVersion" class="fi vpfx-fi" placeholder="2.1.0">
+              <div class="fsel-wrap">
+                <select id="agentVersion" class="fi fsel">
+                  <option value="">Select version…</option>
+                  <option value="14.0.0">14.0.0</option>
+                  <option value="13.0.0">13.0.0</option>
+                  <option value="12.0.0">12.0.0</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -404,6 +475,36 @@
           </div>
         </div>
 
+        <!-- ── §06 Assignment (Admin Only) ── -->
+        <div class="fcard-section" id="assignee-section" style="display:none">
+          <div class="fcs-header">
+            <div class="fcs-num">06</div>
+            <div class="fcs-info">
+              <h3 class="fcs-title">Assignment
+                <span style="display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#fbbf24;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.28);border-radius:5px;padding:2px 8px;vertical-align:middle;">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Admin Only
+                </span>
+              </h3>
+              <p class="fcs-sub">Assign this incident to a developer for investigation and resolution</p>
+            </div>
+          </div>
+          <div class="fg r3">
+            <div class="field">
+              <label class="fl">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Assign To
+              </label>
+              <div class="fsel-wrap">
+                <select id="assignee" class="fi fsel">
+                  <option value="">— Unassigned —</option>
+                </select>
+                <svg class="fsel-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Submit footer card -->
         <div class="fcard-footer">
           <p class="fcard-hint"><sup class="req">*</sup> Required fields</p>
@@ -587,6 +688,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script type="module" src="pages/dashboard/main.js"></script>
 </body>
 </html>

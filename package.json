@@ -1,6 +1,6 @@
 {
   "name": "Rca-Server",
-  "version": "1.0.0-Pre06",
+  "version": "1.0.0-Pre07",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -17,7 +17,8 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.0.0",
-    "multer": "2.1.1"
+    "multer": "2.1.1",
+    "nodemailer": "^8.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

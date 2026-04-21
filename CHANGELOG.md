@@ -1,3 +1,7 @@
+## [1.0.0-Pre07] - 19-Apr-2026
+### Added
+- [Jeeva] Revamped Login UI and fixed Logo's.
+
 ## [1.0.0-Pre06] - 19-Apr-2026
 ### Added
 - [Jeeva] Revamped UI and added users page and Admin Access

@@ -27,7 +27,8 @@
       "Bash(netstat -ano)",
       "Bash(findstr :4300)",
       "Bash(tasklist)",
-      "Bash(findstr /i \"node\")"
+      "Bash(findstr /i \"node\")",
+      "Bash(npm install *)"
     ]
   }
 }

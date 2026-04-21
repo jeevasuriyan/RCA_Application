@@ -118,6 +118,36 @@ export async function deleteAdminUser(userId, userName) {
   }
 }
 
+export async function initAssigneeField() {
+  if (!window.getSessionUser()?.isAdmin) return;
+  const section = document.getElementById('assignee-section');
+  if (section) section.style.display = '';
+  await refreshAssigneeDropdown();
+}
+
+export async function refreshAssigneeDropdown() {
+  const select = document.getElementById('assignee');
+  if (!select) return;
+  try {
+    const res = await fetch(ADMIN_API);
+    if (!res.ok) return;
+    const users = await res.json();
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">— Unassigned —</option>';
+    users.forEach(user => {
+      const opt = document.createElement('option');
+      opt.value = user._id;
+      opt.dataset.name = user.name;
+      opt.dataset.email = user.email;
+      opt.textContent = `${user.name} (${user.email})`;
+      select.appendChild(opt);
+    });
+    if (currentVal) select.value = currentVal;
+  } catch (err) {
+    console.error('Failed to load assignee options:', err);
+  }
+}
+
 function escAdminHtml(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

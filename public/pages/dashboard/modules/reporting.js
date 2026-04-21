@@ -75,6 +75,7 @@ export function viewReport(id) {
             <div class="rm-field"><span class="rm-label">Priority</span><span class="rm-value rm-badge-inline ${priority.cls}">${priority.label}</span></div>
             <div class="rm-field"><span class="rm-label">Affected Module</span><span class="rm-value">${escHtml(affectedModule)}</span></div>
             <div class="rm-field"><span class="rm-label">Affected Feature</span><span class="rm-value">${escHtml(affectedFeature)}</span></div>
+            ${rca.assignee?.name ? `<div class="rm-field"><span class="rm-label">Assigned To</span><span class="rm-value" style="color:#fbbf24;font-weight:600;">${escHtml(rca.assignee.name)}</span></div>` : ''}
           </div>
           ${rca.description ? `<div class="rm-desc-block">${escHtml(rca.description)}</div>` : ''}
         </div>
@@ -525,17 +526,40 @@ export async function downloadWordDoc() {
   }
 }
 
-export function downloadPDF() {
+export async function downloadPDF() {
   const modal = document.getElementById('report-modal');
   const id = modal.dataset.rcaId;
   const rca = rcaCache[id];
-  const originalTitle = document.title;
+  const body = document.getElementById('report-modal-body');
+  const btn = document.getElementById('btn-pdf-dl');
 
-  if (rca) {
-    document.title = `RCA_${(rca.clientName || 'report').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
+  if (!body) return;
+
+  const filename = `RCA_${(rca?.clientName || 'report').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0"/></svg> Generating…`;
   }
-  window.print();
-  document.title = originalTitle;
+
+  try {
+    await window.html2pdf()
+      .set({
+        margin: [12, 12, 12, 12],
+        filename,
+        image: { type: 'jpeg', quality: 0.97 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+      })
+      .from(body)
+      .save();
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> PDF`;
+    }
+  }
 }
 
 export function bindReportEvents() {

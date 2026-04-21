@@ -3,6 +3,7 @@ import multer from 'multer';
 import { ObjectId } from 'mongodb';
 import { getDb } from '../../config/db.js';
 import { authenticate } from '../auth/auth.middleware.js';
+import { sendNewRCANotification, sendAssignmentNotification } from '../mailer/mailer.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -48,9 +49,37 @@ router.post('/', authenticate, upload.any(), async (req, res) => {
 
     const result = await db.collection('rca').insertOne(data);
     res.status(201).json(result);
+
+    // Fire-and-forget: notify team and assignee (non-blocking)
+    sendNewRCANotification(data).catch(err => console.error('Mail error (new RCA):', err));
+    if (data.assignee?.email) {
+      sendAssignmentNotification(data, data.assignee).catch(err => console.error('Mail error (assignment):', err));
+    }
   } catch (err) {
     console.error('POST /rca error:', err);
     res.status(500).json({ error: 'Failed to create RCA' });
+  }
+});
+
+router.get('/stats', async (_req, res) => {
+  try {
+    const db = getDb();
+    const all = await db.collection('rca')
+      .find({}, { projection: { priority: 1, clientName: 1, product: 1, createdAt: 1, title: 1 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const p = (v) => (v || '').toLowerCase();
+    const critical = all.filter(r => p(r.priority) === 'critical').length;
+    const high     = all.filter(r => p(r.priority) === 'high').length;
+    const medium   = all.filter(r => p(r.priority) === 'medium').length;
+    const total    = all.length;
+    const latest   = all[0] || null;
+
+    res.json({ critical, high, medium, total, latest });
+  } catch (err) {
+    console.error('GET /rca/stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
 
@@ -92,6 +121,15 @@ router.put('/:id', authenticate, upload.any(), async (req, res) => {
 
     const db = getDb();
     const data = parseUpload(req);
+
+    // Capture existing assignee before update to detect changes
+    const existingRca = await db.collection('rca').findOne(
+      { _id: new ObjectId(req.params.id) },
+      { projection: { assignee: 1, attachments: 1, clientName: 1, priority: 1, title: 1, createdAt: 1 } }
+    );
+    const prevAssigneeId = existingRca?.assignee?.id || null;
+    const newAssigneeId = data.assignee?.id || null;
+
     const hasExplicitExisting = 'existingEmailImages' in data || 'existingScreenshots' in data;
 
     if (hasExplicitExisting) {
@@ -153,6 +191,13 @@ router.put('/:id', authenticate, upload.any(), async (req, res) => {
     }
 
     res.json(result);
+
+    // Fire assignment email only when assignee is newly set or changed
+    const assigneeChanged = newAssigneeId && newAssigneeId !== prevAssigneeId;
+    if (assigneeChanged && data.assignee?.email) {
+      const updatedRca = { ...existingRca, ...data };
+      sendAssignmentNotification(updatedRca, data.assignee).catch(err => console.error('Mail error (assignment update):', err));
+    }
   } catch (err) {
     console.error('PUT /rca/:id error:', err);
     res.status(500).json({ error: 'Failed to update RCA' });

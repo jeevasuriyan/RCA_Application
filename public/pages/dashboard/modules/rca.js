@@ -69,6 +69,12 @@ export async function createRCA() {
 
   try {
     const formData = new FormData();
+    const assigneeSelect = document.getElementById('assignee');
+    const selectedOpt = assigneeSelect?.selectedOptions[0];
+    const assignee = selectedOpt?.value
+      ? { id: selectedOpt.value, name: selectedOpt.dataset.name || selectedOpt.textContent, email: selectedOpt.dataset.email || '' }
+      : null;
+
     const fields = {
       clientName,
       priority,
@@ -89,6 +95,7 @@ export async function createRCA() {
       pmTest: document.getElementById('pm-test').value.trim(),
       pmProcess: document.getElementById('pm-process').value.trim(),
       pmMonitoring: document.getElementById('pm-monitoring').value.trim(),
+      assignee,
     };
 
     fields.existingEmailImages = emailImages.filter(item => item.isExisting).map(item => item.name || item.filename);
@@ -118,6 +125,8 @@ export async function createRCA() {
       'clientVersion', 'serverVersion', 'agentVersion'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    const assigneeSel = document.getElementById('assignee');
+    if (assigneeSel) assigneeSel.value = '';
     quill.setContents([]);
     resetAttachmentState();
 
@@ -164,6 +173,8 @@ export async function createRCA() {
         'clientVersion', 'serverVersion', 'agentVersion'].forEach(id => {
         document.getElementById(id).value = '';
       });
+      const assigneeSelFb = document.getElementById('assignee');
+      if (assigneeSelFb) assigneeSelFb.value = '';
       quill.setContents([]);
       resetAttachmentState();
 
@@ -265,6 +276,10 @@ export function renderRCA(data) {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             ${escHtml(raisedBy)}
           </span>
+          ${rca.assignee?.name ? `<span class="cmeta" style="color:#fbbf24;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${escHtml(rca.assignee.name)}
+          </span>` : ''}
         </div>
         ${hasVer ? `
         <div class="vrow">
@@ -393,6 +408,13 @@ export function editRCA(id) {
 
   if (document.getElementById('correctiveAction')) {
     document.getElementById('correctiveAction').value = rca.correctiveAction || '';
+  }
+
+  const assigneeSelect = document.getElementById('assignee');
+  if (assigneeSelect && rca.assignee?.id) {
+    assigneeSelect.value = rca.assignee.id;
+  } else if (assigneeSelect) {
+    assigneeSelect.value = '';
   }
 
   ['pm-code', 'pm-test', 'pm-process', 'pm-monitoring'].forEach(fieldId => {

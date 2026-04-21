@@ -762,7 +762,7 @@ option { background: #eaecf5; color: var(--ink); }
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: 36px 40px 80px;
+  padding: 36px 56px 80px;
 }
 
 .reports-header {
@@ -819,83 +819,21 @@ option { background: #eaecf5; color: var(--ink); }
 
 .reports-grid {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
-  overflow-x: auto;
-  overflow-y: hidden;
   width: 100%;
-  padding: 8px 0 8px;
+  padding: 8px 0 16px;
   margin: 0;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: 0;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.reports-grid::-webkit-scrollbar {
-  display: none;
 }
 
-.reports-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 3;
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  border: 1px solid rgba(45,212,191,0.24);
-  background: rgba(6, 18, 15, 0.92);
-  color: #9fe0d7;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform var(--t), opacity var(--t), border-color var(--t), color var(--t), background var(--t);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.36);
-  backdrop-filter: blur(16px);
-}
-.reports-nav:hover:not(:disabled) {
-  transform: translateY(-50%) scale(1.06);
-  border-color: rgba(45,212,191,0.42);
-  color: #d7fffa;
-  background: rgba(8, 28, 24, 0.96);
-}
-.reports-nav:disabled {
-  opacity: 0.32;
-  cursor: default;
-}
-.reports-nav.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-.reports-nav-prev { left: -18px; }
-.reports-nav-next { right: -18px; }
-
-.reports-carousel::before,
-.reports-carousel::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 54px;
-  z-index: 2;
-  pointer-events: none;
-}
-.reports-carousel::before {
-  left: 0;
-  background: linear-gradient(90deg, rgba(6,13,11,0.96), rgba(6,13,11,0));
-}
-.reports-carousel::after {
-  right: 0;
-  background: linear-gradient(270deg, rgba(6,13,11,0.96), rgba(6,13,11,0));
-}
+.reports-nav { display: none; }
 
 /* ── RCA Card — New Design ── */
 .rca-card {
-  flex: 0 0 calc((100% - 72px) / 5);
-  width: calc((100% - 72px) / 5);
-  min-width: 250px;
-  min-height: 380px;
+  flex: 0 0 calc((100% - 90px) / 6);
+  width: calc((100% - 90px) / 6);
+  min-width: 230px;
+  min-height: 300px;
   background: rgba(255,255,255,0.92);
   border: 1px solid rgba(99,102,241,0.10);
   border-radius: var(--r);
@@ -905,7 +843,6 @@ option { background: #eaecf5; color: var(--ink); }
   display: flex; flex-direction: column;
   backdrop-filter: blur(24px);
   position: relative;
-  scroll-snap-align: start;
 }
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(16px); }
@@ -1420,11 +1357,7 @@ option { background: #eaecf5; color: var(--ink); }
 }
 @media (max-width: 600px) {
   .reports-shell { padding: 28px 16px 64px; }
-  .reports-grid { gap: 14px; padding-bottom: 8px; }
-  .rca-card { flex-basis: 86vw; width: 86vw; min-height: 350px; }
-  .reports-nav { width: 36px; height: 36px; }
-  .reports-nav-prev { left: -6px; }
-  .reports-nav-next { right: -6px; }
+  .reports-grid { gap: 12px; padding-bottom: 8px; }
   .navbar-inner { gap: 12px; padding: 0 16px; }
   .brand-wordmark { display: none; }
   .fcard-footer { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -1435,31 +1368,38 @@ option { background: #eaecf5; color: var(--ink); }
   .hero-title-main { font-size: 22px; }
 }
 
-@media (max-width: 1480px) {
+@media (max-width: 1600px) {
+  .rca-card {
+    flex-basis: calc((100% - 72px) / 5);
+    width: calc((100% - 72px) / 5);
+  }
+}
+
+@media (max-width: 1280px) {
   .rca-card {
     flex-basis: calc((100% - 54px) / 4);
     width: calc((100% - 54px) / 4);
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 980px) {
   .rca-card {
     flex-basis: calc((100% - 36px) / 3);
     width: calc((100% - 36px) / 3);
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 660px) {
   .rca-card {
     flex-basis: calc((100% - 18px) / 2);
     width: calc((100% - 18px) / 2);
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 440px) {
   .rca-card {
-    flex-basis: 86vw;
-    width: 86vw;
+    flex-basis: 100%;
+    width: 100%;
   }
 }
 

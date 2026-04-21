@@ -10,103 +10,96 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%; font-family: 'Inter', sans-serif;
-      font-size: 14px; -webkit-font-smoothing: antialiased; overflow: hidden;
-    }
-
-    /* ── Background — deep carbon with sapphire color grading ── */
-    body {
-      background-color: #07090e;
-      background-image:
-        radial-gradient(ellipse 120% 70% at 50% -20%,  rgba(30,86,214,0.38)  0%, rgba(20,55,160,0.14) 48%, transparent 72%),
-        radial-gradient(ellipse 60% 50%  at -8%  95%,  rgba(16,164,120,0.20) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 45%  at 108% 95%,  rgba(10,22,70,0.55)   0%, transparent 55%);
-      position: relative;
+      font-size: 14px; -webkit-font-smoothing: antialiased;
     }
 
     /* ── Page layout ── */
     .login-page {
       position: relative; z-index: 1;
-      width: 100vw; height: 100vh;
-      display: flex; align-items: center;
+      width: 100%; min-height: 100vh;
+      display: flex;
+      align-items: stretch;
       justify-content: space-between;
-      padding: 0 80px;
+      padding: 44px 72px;
+      background-image: url('../images/bgimage.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
     /* ════════════════════════════════════
-       LEFT — brand story + live stats
+       LEFT PANEL
     ════════════════════════════════════ */
     .info-side {
-      flex: 1; display: flex; flex-direction: column; gap: 16px;
-      max-width: 300px; padding-bottom: 32px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 400px;
+      gap: 14px;
     }
 
-    /* Headline */
+    /* Headline block */
     .info-headline {
-      margin-bottom: 6px;
       animation: slideUp .6s cubic-bezier(.34,1.4,.64,1) .05s both;
     }
     .info-headline .eyebrow {
       font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
-      text-transform: uppercase; color: #4e9af7; margin-bottom: 14px;
+      text-transform: uppercase; color: #6366f1; margin-bottom: 12px;
       display: flex; align-items: center; gap: 8px;
     }
     .info-headline .eyebrow::before {
       content: ''; display: inline-block; width: 20px; height: 1.5px;
-      background: #4e9af7; border-radius: 2px;
+      background: #6366f1; border-radius: 2px;
     }
     .info-headline h2 {
-      font-size: 30px; font-weight: 800; color: #e8f0fe;
-      line-height: 1.18; letter-spacing: -0.9px; margin-bottom: 12px;
+      font-size: 32px; font-weight: 800; color: #0f172a;
+      line-height: 1.15; letter-spacing: -1px; margin-bottom: 12px;
     }
-    .info-headline h2 em {
-      font-style: normal;
-      background: linear-gradient(120deg, #5ba3f5 0%, #34c9a0 100%);
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .info-headline h2 em { font-style: normal; color: #2563eb; }
     .info-headline p {
-      font-size: 13px; color: rgba(200,218,255,0.42); line-height: 1.7;
+      font-size: 13px; color: #64748b; line-height: 1.7; max-width: 340px;
     }
 
-    /* Floating cards */
+    /* Cards */
     .float-card {
-      background: rgba(9,13,26,0.86);
-      border: 1px solid rgba(56,130,230,0.14);
-      border-radius: 16px; padding: 17px 20px; color: #e2ecff;
+      background: #ffffff;
+      border: 1px solid rgba(99,102,241,0.12);
+      border-radius: 16px; padding: 16px 18px;
       animation: slideUp .6s cubic-bezier(.34,1.4,.64,1) both;
       position: relative; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(99,102,241,0.07), 0 1px 3px rgba(0,0,0,0.05);
     }
     .float-card::after {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(91,163,245,0.30), transparent);
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent);
     }
     .float-card:nth-child(2) { animation-delay: .18s; }
     .float-card:nth-child(3) { animation-delay: .32s; }
     .float-card:nth-child(4) { animation-delay: .46s; }
+
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(18px) scale(0.97); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .fc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .fc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .fc-dot {
       width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
       animation: pulseDot 2.4s ease-in-out infinite;
     }
-    .fc-dot-crit { background: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
-    .fc-dot-ok   { background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,0.18); }
     @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .fc-label { font-size: 12.5px; font-weight: 600; color: #dde8ff; }
-    .fc-meta  { font-size: 11px; color: #3a4e6e; margin-top: 2px; }
-    .fc-body  { font-size: 12px; color: #8ba0c4; line-height: 1.65; }
-    .fc-accent{ color: #5ba3f5; font-weight: 600; }
+    .fc-label { font-size: 12.5px; font-weight: 600; color: #1e293b; }
+    .fc-meta  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .fc-body  { font-size: 12px; color: #64748b; line-height: 1.65; }
+    .fc-accent{ color: #6366f1; font-weight: 600; }
 
     .fc-stats { display: flex; gap: 24px; }
     .fc-stat  { text-align: center; }
     .fc-stat-num { font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
-    .fc-stat-lbl { font-size: 9.5px; color: #3a4e6e; text-transform: uppercase; letter-spacing: .7px; margin-top: 5px; }
+    .fc-stat-lbl { font-size: 9.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: .7px; margin-top: 5px; }
     .num-crit { color: #f87171; }
     .num-high { color: #fb923c; }
+    .num-med  { color: #fbbf24; }
     .num-ok   { color: #34d399; }
 
     .fc-row { display: flex; align-items: center; gap: 12px; }
@@ -114,21 +107,41 @@
       width: 30px; height: 30px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .fc-icon-ok   { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.22); color: #34d399; }
-    .fc-icon-blue { background: rgba(91,163,245,0.10); border: 1px solid rgba(91,163,245,0.22); color: #5ba3f5; }
+    .fc-icon-ok   { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: #10b981; }
+    .fc-icon-blue { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.20); color: #6366f1; }
+
+    /* Features strip — naturally at the bottom via margin-top: auto */
+    .info-features {
+      margin-top: auto;
+      display: flex; gap: 20px;
+      padding-top: 10px;
+    }
+    .info-feature { display: flex; align-items: flex-start; gap: 9px; }
+    .info-feature-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #64748b; margin-top: 1px;
+    }
+    .info-feature-title {
+      font-size: 12px; font-weight: 600; color: #1e293b; line-height: 1.3;
+    }
+    .info-feature-sub {
+      font-size: 10.5px; color: #94a3b8; line-height: 1.4; margin-top: 2px; max-width: 115px;
+    }
 
     /* ════════════════════════════════════
        RIGHT — Login Card
     ════════════════════════════════════ */
     .form-float {
-      width: 394px; flex-shrink: 0;
-      background: linear-gradient(160deg, rgba(10,14,28,0.97) 0%, rgba(8,11,22,0.99) 100%);
-      border: 1px solid rgba(56,130,230,0.16);
-      border-radius: 24px; padding: 44px 40px;
+      width: 390px; flex-shrink: 0;
+      align-self: center;
+      background: #ffffff;
+      border: 1px solid rgba(99,102,241,0.10);
+      border-radius: 24px; padding: 40px 38px;
       box-shadow:
-        0 0 0 1px rgba(91,163,245,0.06),
-        0 32px 80px rgba(0,0,0,0.72),
-        0 8px 24px rgba(0,0,0,0.40);
+        0 0 0 1px rgba(99,102,241,0.04),
+        0 24px 64px rgba(0,0,0,0.12),
+        0 4px 16px rgba(0,0,0,0.06);
       position: relative; overflow: hidden;
       animation: cardIn .55s cubic-bezier(.34,1.4,.64,1) .06s both;
     }
@@ -137,29 +150,23 @@
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
     .form-float::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, transparent 0%, #2563eb 25%, #5ba3f5 50%, #34c9a0 75%, transparent 100%);
       border-radius: 24px 24px 0 0;
     }
-    .form-float::after {
-      content: ''; position: absolute; top: -60px; right: -60px;
-      width: 220px; height: 220px;
-      background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
 
     /* Brand */
-    .sp-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-    .sp-logo-wrap { width: 46px; height: 46px; display: grid; place-items: center; flex-shrink: 0; }
-    .sp-brand-name { font-size: 15px; font-weight: 800; color: #dde8ff; letter-spacing: -.4px; }
-    .sp-brand-sub  { font-size: 10.5px; color: #2b3c5e; margin-top: 2px; letter-spacing: .3px; }
+    .sp-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+    .rca-logo-img { height: 40px; width: auto; flex-shrink: 0; object-fit: contain; }
+    .sp-brand-name { font-size: 15px; font-weight: 800; color: #0f172a; letter-spacing: -.4px; }
+    .sp-brand-sub  { font-size: 10.5px; color: #94a3b8; margin-top: 2px; letter-spacing: .3px; }
 
     /* Heading */
     .sp-heading {
-      font-size: 25px; font-weight: 800; color: #dde8ff;
+      font-size: 26px; font-weight: 800; color: #0f172a;
       letter-spacing: -.6px; line-height: 1.18; margin-bottom: 6px;
     }
-    .sp-sub { font-size: 13px; color: #3e526e; line-height: 1.6; margin-bottom: 28px; }
+    .sp-sub { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 26px; }
 
     /* Alert */
     .auth-alert {
@@ -175,65 +182,62 @@
     @keyframes fadeSlide { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
 
     /* Form fields */
-    .form-group { margin-bottom: 18px; }
+    .form-group { margin-bottom: 16px; }
     .form-label {
       display: block; font-size: 11px; font-weight: 600;
-      color: #2e4060; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px;
+      color: #475569; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px;
     }
     .input-wrap { position: relative; }
     .input-icon {
       position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      color: #253450; pointer-events: none;
+      color: #94a3b8; pointer-events: none;
       display: flex; align-items: center; transition: color .2s;
     }
     .form-input {
-      width: 100%; background: rgba(255,255,255,0.035);
-      border: 1px solid rgba(255,255,255,0.07);
+      width: 100%; background: #f1f5fb;
+      border: 1px solid #e2e8f0;
       border-radius: 11px; padding: 13px 14px 13px 42px;
-      color: #dde8ff; font-size: 14px; font-family: inherit; outline: none;
+      color: #0f172a; font-size: 14px; font-family: inherit; outline: none;
       transition: border-color .2s, background .2s, box-shadow .2s;
       line-height: 1.4;
     }
-    .form-input::placeholder { color: #253450; font-size: 13px; }
-    .form-input:hover:not(:focus) {
-      border-color: rgba(255,255,255,0.11); background: rgba(255,255,255,0.055);
-    }
+    .form-input::placeholder { color: #94a3b8; font-size: 13px; }
+    .form-input:hover:not(:focus) { border-color: #cbd5e1; background: #edf2f9; }
     .form-input:focus {
-      border-color: rgba(37,99,235,0.55);
-      background: rgba(37,99,235,0.05);
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.11);
+      border-color: rgba(99,102,241,0.55);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.10);
     }
-    .input-wrap:focus-within .input-icon { color: #5ba3f5; }
+    .input-wrap:focus-within .input-icon { color: #6366f1; }
     .form-input.has-eye { padding-right: 42px; }
 
     .eye-btn {
       position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: #253450; cursor: pointer;
+      background: none; border: none; color: #94a3b8; cursor: pointer;
       padding: 3px; display: flex; align-items: center; transition: color .2s;
     }
-    .eye-btn:hover { color: #5ba3f5; }
+    .eye-btn:hover { color: #6366f1; }
 
     .forgot-link {
       display: block; text-align: right; font-size: 11.5px;
-      color: #2e4060; text-decoration: none; margin-top: 6px; transition: color .2s;
+      color: #94a3b8; text-decoration: none; margin-top: 6px; transition: color .2s;
     }
-    .forgot-link:hover { color: #5ba3f5; }
+    .forgot-link:hover { color: #6366f1; }
 
     /* Submit button */
     .btn-primary {
-      width: 100%; margin-top: 8px;
-      background: linear-gradient(135deg, #2563eb 0%, #1a4ec4 100%);
+      width: 100%; margin-top: 10px;
+      background: #2563eb;
       color: #fff; border: none; border-radius: 11px;
       padding: 14px; font-size: 14px; font-weight: 600;
       font-family: inherit; cursor: pointer; transition: all .2s;
-      box-shadow: 0 4px 20px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.08) inset;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.40);
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      letter-spacing: -.1px;
     }
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(37,99,235,0.55), 0 1px 0 rgba(255,255,255,0.08) inset;
-      background: linear-gradient(135deg, #2f6ef5 0%, #2052d4 100%);
+      box-shadow: 0 8px 28px rgba(37,99,235,0.55);
+      background: #1d4ed8;
     }
     .btn-primary:active:not(:disabled) { transform: translateY(0); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -247,23 +251,23 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Divider */
-    .sp-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 18px; }
-    .sp-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-    .sp-divider-text { font-size: 11px; color: #253450; text-transform: uppercase; letter-spacing: .6px; }
+    .sp-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; }
+    .sp-divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+    .sp-divider-text { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .6px; }
 
     /* Footer */
-    .sp-footer { text-align: center; font-size: 13px; color: #3e526e; margin-top: 20px; }
-    .sp-link { color: #5ba3f5; font-weight: 600; text-decoration: none; transition: color .2s; }
-    .sp-link:hover { color: #82baf8; }
+    .sp-footer { text-align: center; font-size: 13px; color: #94a3b8; }
+    .sp-link { color: #2563eb; font-weight: 600; text-decoration: none; transition: color .2s; }
+    .sp-link:hover { color: #1d4ed8; }
 
     /* Toast stack */
     .toasts { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
     .toast {
       display: flex; align-items: center; gap: 9px;
       padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 500;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      box-shadow: 0 4px 20px rgba(0,0,0,.10);
       animation: toastIn .3s cubic-bezier(.34,1.56,.64,1) both;
-      max-width: 320px;
+      max-width: 320px; background: #fff;
     }
     .toast.success { background: rgba(52,211,153,.12);  border: 1px solid rgba(52,211,153,.28);  color: #34d399; }
     .toast.error   { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.28); color: #f87171; }
@@ -271,10 +275,9 @@
     @keyframes toastIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
 
     /* Responsive */
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       .info-side { display: none; }
       .login-page { justify-content: center; padding: 24px; }
-      html, body { overflow: auto; height: auto; }
     }
     @media (max-width: 460px) {
       .form-float { width: 100%; padding: 34px 24px; border-radius: 20px; }
@@ -285,65 +288,99 @@
 
   <div class="login-page">
 
-    <!-- ══ LEFT: Brand story + live stats ══ -->
+    <!-- ══ LEFT: Brand + cards + features ══ -->
     <div class="info-side">
 
       <!-- Headline -->
       <div class="info-headline">
         <div class="eyebrow">Incident Intelligence</div>
         <h2>Analyze. Resolve.<br><em>Prevent.</em></h2>
-        <p>A structured workspace to document incidents, trace root causes, and ship preventive fixes — fast.</p>
+        <p>A structured workspace to document incidents,<br>trace root causes, and ship preventive fixes — fast.</p>
       </div>
 
       <!-- Card 1: live incident -->
       <div class="float-card">
         <div class="fc-head">
-          <div class="fc-dot fc-dot-crit"></div>
+          <div class="fc-dot" id="fc-dot"></div>
           <div>
-            <div class="fc-label">Critical Incident Raised</div>
-            <div class="fc-meta">Payment Gateway · 2 min ago</div>
+            <div class="fc-label" id="fc-incident-label">Loading…</div>
+            <div class="fc-meta" id="fc-incident-meta">—</div>
           </div>
         </div>
-        <div class="fc-body">
-          Root cause identified —
-          <span class="fc-accent">DB timeout</span> under peak load.
-          Corrective action in progress.
-        </div>
+        <div class="fc-body" id="fc-incident-body">Fetching latest incident data…</div>
       </div>
 
       <!-- Card 2: stats -->
       <div class="float-card">
-        <div style="font-size:10px;font-weight:700;color:#2e4060;text-transform:uppercase;letter-spacing:.9px;margin-bottom:14px;">
-          Active Incidents
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.9px;margin-bottom:13px;">
+          Incident Overview
         </div>
         <div class="fc-stats">
-          <div class="fc-stat"><div class="fc-stat-num num-crit">3</div><div class="fc-stat-lbl">Critical</div></div>
-          <div class="fc-stat"><div class="fc-stat-num num-high">7</div><div class="fc-stat-lbl">High</div></div>
-          <div class="fc-stat"><div class="fc-stat-num num-ok">14</div><div class="fc-stat-lbl">Resolved</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-crit" id="fc-stat-critical">—</div><div class="fc-stat-lbl">Critical</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-high" id="fc-stat-high">—</div><div class="fc-stat-lbl">High</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-med" id="fc-stat-medium">—</div><div class="fc-stat-lbl">Medium</div></div>
+          <div class="fc-stat"><div class="fc-stat-num num-ok" id="fc-stat-total">—</div><div class="fc-stat-lbl">Total</div></div>
         </div>
       </div>
 
-      <!-- Card 3: closed RCA -->
+      <!-- Card 3: latest report -->
       <div class="float-card">
         <div class="fc-row">
           <div class="fc-icon-box fc-icon-ok">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+              <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>
             </svg>
           </div>
           <div>
-            <div class="fc-label">RCA Report Closed</div>
-            <div class="fc-meta">Auth Module · Just now</div>
+            <div class="fc-label" id="fc-latest-label">Latest Report</div>
+            <div class="fc-meta" id="fc-latest-meta">—</div>
           </div>
         </div>
-        <div style="margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.05);">
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;">
           <div class="fc-row" style="gap:8px;">
             <div class="fc-icon-box fc-icon-blue" style="width:26px;height:26px;border-radius:7px;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
             </div>
-            <span style="font-size:11.5px;color:#6882a8;">Resolved in <span class="fc-accent">4h 22m</span></span>
+            <span style="font-size:11.5px;color:#94a3b8;" id="fc-latest-sub">Tracking root cause analysis</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features strip — pushed to bottom naturally -->
+      <div class="info-features">
+        <div class="info-feature">
+          <div class="info-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="info-feature-title">Secure</div>
+            <div class="info-feature-sub">Enterprise grade security</div>
+          </div>
+        </div>
+        <div class="info-feature">
+          <div class="info-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <div>
+            <div class="info-feature-title">Data Driven</div>
+            <div class="info-feature-sub">Insights that help you make better decisions</div>
+          </div>
+        </div>
+        <div class="info-feature">
+          <div class="info-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="info-feature-title">Faster Resolution</div>
+            <div class="info-feature-sub">Reduce MTTR with effective root cause analysis</div>
           </div>
         </div>
       </div>
@@ -355,9 +392,7 @@
 
       <!-- Brand -->
       <div class="sp-brand">
-        <div class="sp-logo-wrap">
-          <img src="../images/image.png" alt="RCA Manager Logo" style="width:46px;height:46px;object-fit:contain;border-radius:0;">
-        </div>
+        <img src="../images/image.png" alt="RCA Logo" class="rca-logo-img">
         <div>
           <div class="sp-brand-name">RCA Manager</div>
           <div class="sp-brand-sub">Root Cause Analysis Platform</div>
@@ -435,5 +470,66 @@
 
   <script src="/auth/auth.js"></script>
   <script src="/pages/auth/login.js"></script>
+  <script>
+    function timeAgo(date) {
+      const diff = Math.floor((Date.now() - date) / 1000);
+      if (diff < 60)   return diff + 's ago';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    (async () => {
+      try {
+        const res  = await fetch('/rca/stats');
+        const data = await res.json();
+
+        document.getElementById('fc-stat-critical').textContent = data.critical ?? 0;
+        document.getElementById('fc-stat-high').textContent     = data.high     ?? 0;
+        document.getElementById('fc-stat-medium').textContent   = data.medium   ?? 0;
+        document.getElementById('fc-stat-total').textContent    = data.total    ?? 0;
+
+        if (data.latest) {
+          const prio   = (data.latest.priority || '').toLowerCase();
+          const ago    = timeAgo(new Date(data.latest.createdAt));
+          const client = data.latest.clientName || 'Unknown';
+
+          const dot = document.getElementById('fc-dot');
+          const labelMap = { critical: 'Critical Incident Raised', high: 'High Priority Incident', medium: 'Medium Priority Incident', low: 'Incident Logged' };
+          const colorMap = { critical: '#f87171', high: '#fb923c', medium: '#fbbf24', low: '#34d399' };
+          dot.style.background = colorMap[prio] || '#64748b';
+          document.getElementById('fc-incident-label').textContent = labelMap[prio] || 'Incident Logged';
+          document.getElementById('fc-incident-meta').textContent  = client + ' · ' + ago;
+          document.getElementById('fc-incident-body').innerHTML    =
+            'Priority: <span class="fc-accent">' + (data.latest.priority || 'Unknown') + '</span>. Logged and under investigation.';
+
+          document.getElementById('fc-latest-label').textContent = data.latest.title || 'Latest Report';
+          document.getElementById('fc-latest-meta').textContent  = client + ' · ' + ago;
+          document.getElementById('fc-latest-sub').innerHTML     =
+            data.total + ' report' + (data.total !== 1 ? 's' : '') + ' across <span class="fc-accent">' + (data.critical + data.high) + '</span> active incidents';
+        } else {
+          document.getElementById('fc-dot').style.background = '#34d399';
+          document.getElementById('fc-incident-label').textContent = 'Platform Ready';
+          document.getElementById('fc-incident-meta').textContent  = 'No active incidents';
+          document.getElementById('fc-incident-body').textContent  = 'Start logging root cause analysis reports to track and resolve incidents.';
+          document.getElementById('fc-latest-label').textContent   = 'No reports yet';
+          document.getElementById('fc-latest-meta').textContent    = 'Create your first RCA report';
+          document.getElementById('fc-latest-sub').textContent     = 'Begin tracking incidents and root causes';
+        }
+      } catch (_) {
+        document.getElementById('fc-dot').style.background = '#64748b';
+        document.getElementById('fc-incident-label').textContent = 'Incident Intelligence';
+        document.getElementById('fc-incident-meta').textContent  = 'Real-time tracking';
+        document.getElementById('fc-incident-body').textContent  = 'Document incidents, trace root causes, and ship preventive fixes.';
+        document.getElementById('fc-stat-critical').textContent  = '—';
+        document.getElementById('fc-stat-high').textContent      = '—';
+        document.getElementById('fc-stat-medium').textContent    = '—';
+        document.getElementById('fc-stat-total').textContent     = '—';
+        document.getElementById('fc-latest-label').textContent   = 'RCA Platform';
+        document.getElementById('fc-latest-meta').textContent    = 'Structured incident management';
+        document.getElementById('fc-latest-sub').textContent     = 'Analyze, resolve, and prevent incidents';
+      }
+    })();
+  </script>
 </body>
 </html>

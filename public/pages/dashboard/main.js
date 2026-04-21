@@ -27,7 +27,7 @@ import {
   openLightbox,
   viewReport,
 } from './modules/reporting.js';
-import { deleteAdminUser, initAdminNav, loadAdminUsers, toggleAdminStatus } from './modules/admin.js';
+import { deleteAdminUser, initAdminNav, initAssigneeField, loadAdminUsers, toggleAdminStatus } from './modules/admin.js';
 import { cancelEdit, populateNavbarUser, setToggle, switchView } from './modules/ui.js';
 
 window.setToggle = setToggle;
@@ -69,10 +69,12 @@ fetch('/auth/me')
     }
     populateNavbarUser();
     initAdminNav();
+    initAssigneeField();
   })
   .catch(() => {
     populateNavbarUser();
     initAdminNav();
+    initAssigneeField();
   });
 
 bindReportEvents();
